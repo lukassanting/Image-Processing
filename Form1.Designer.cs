@@ -131,7 +131,7 @@
             // 
             // applyButton
             // 
-            this.applyButton.Location = new System.Drawing.Point(557, 11);
+            this.applyButton.Location = new System.Drawing.Point(547, 9);
             this.applyButton.Name = "applyButton";
             this.applyButton.Size = new System.Drawing.Size(103, 23);
             this.applyButton.TabIndex = 3;
@@ -146,7 +146,7 @@
             // 
             // saveButton
             // 
-            this.saveButton.Location = new System.Drawing.Point(948, 11);
+            this.saveButton.Location = new System.Drawing.Point(938, 8);
             this.saveButton.Name = "saveButton";
             this.saveButton.Size = new System.Drawing.Size(95, 23);
             this.saveButton.TabIndex = 4;
@@ -165,7 +165,7 @@
             // 
             // progressBar
             // 
-            this.progressBar.Location = new System.Drawing.Point(666, 12);
+            this.progressBar.Location = new System.Drawing.Point(656, 11);
             this.progressBar.Name = "progressBar";
             this.progressBar.Size = new System.Drawing.Size(276, 20);
             this.progressBar.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
@@ -179,8 +179,8 @@
             "0. Grayscale conversion",
             "1. Inversion",
             "2. Contrast adjustment",
-            "3. Gaussian filter",
-            "4. Linear (non Gaussian) filtering",
+            "3. :Linear (Gaussian) filtering",
+            "4. Linear (Box) filtering",
             "5. Nonlinear (Median) filtering",
             "6. Edge detection",
             "7. Thresholding",
@@ -188,7 +188,7 @@
             "9. Histogram equalization"});
             this.functionSelector.Location = new System.Drawing.Point(370, 11);
             this.functionSelector.Name = "functionSelector";
-            this.functionSelector.Size = new System.Drawing.Size(180, 21);
+            this.functionSelector.Size = new System.Drawing.Size(173, 21);
             this.functionSelector.TabIndex = 7;
             this.functionSelector.Text = "Choose Function";
             // 
@@ -241,7 +241,7 @@
             this.edgeBox.Controls.Add(this.edgeGaussianCheck);
             this.edgeBox.Controls.Add(this.label10);
             this.edgeBox.Controls.Add(this.edgeSharpW);
-            this.edgeBox.Location = new System.Drawing.Point(10, 235);
+            this.edgeBox.Location = new System.Drawing.Point(21, 182);
             this.edgeBox.Name = "edgeBox";
             this.edgeBox.Size = new System.Drawing.Size(200, 111);
             this.edgeBox.TabIndex = 15;
@@ -296,7 +296,7 @@
             this.caBox.Controls.Add(this.label6);
             this.caBox.Controls.Add(this.label5);
             this.caBox.Controls.Add(this.useMAC);
-            this.caBox.Location = new System.Drawing.Point(10, 128);
+            this.caBox.Location = new System.Drawing.Point(21, 76);
             this.caBox.Name = "caBox";
             this.caBox.Size = new System.Drawing.Size(200, 100);
             this.caBox.TabIndex = 8;
@@ -369,76 +369,76 @@
             // 
             // thresholdInput
             // 
-            this.thresholdInput.Location = new System.Drawing.Point(119, 91);
+            this.thresholdInput.Location = new System.Drawing.Point(178, 41);
             this.thresholdInput.Name = "thresholdInput";
-            this.thresholdInput.Size = new System.Drawing.Size(86, 20);
+            this.thresholdInput.Size = new System.Drawing.Size(37, 20);
             this.thresholdInput.TabIndex = 7;
             this.thresholdInput.Text = "mean";
             // 
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(116, 75);
+            this.label4.Location = new System.Drawing.Point(115, 44);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(54, 13);
+            this.label4.Size = new System.Drawing.Size(57, 13);
             this.label4.TabIndex = 6;
-            this.label4.Text = "Threshold";
+            this.label4.Text = "Threshold:";
             // 
             // medSizeInput
             // 
-            this.medSizeInput.Location = new System.Drawing.Point(10, 92);
+            this.medSizeInput.Location = new System.Drawing.Point(84, 41);
             this.medSizeInput.Name = "medSizeInput";
-            this.medSizeInput.Size = new System.Drawing.Size(91, 20);
+            this.medSizeInput.Size = new System.Drawing.Size(25, 20);
             this.medSizeInput.TabIndex = 5;
             this.medSizeInput.Text = "7";
             // 
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(7, 75);
+            this.label3.Location = new System.Drawing.Point(7, 44);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(65, 13);
+            this.label3.Size = new System.Drawing.Size(68, 13);
             this.label3.TabIndex = 4;
-            this.label3.Text = "Median Size";
+            this.label3.Text = "Median Size:";
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(119, 20);
+            this.label2.Location = new System.Drawing.Point(115, 20);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(83, 13);
+            this.label2.Size = new System.Drawing.Size(86, 13);
             this.label2.TabIndex = 3;
-            this.label2.Text = "Gaussian Sigma";
+            this.label2.Text = "Gaussian Sigma:";
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(7, 20);
+            this.label1.Location = new System.Drawing.Point(6, 20);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(74, 13);
+            this.label1.Size = new System.Drawing.Size(77, 13);
             this.label1.TabIndex = 2;
-            this.label1.Text = "Gaussian Size";
+            this.label1.Text = "Gaussian Size:";
             // 
             // gauSigmaInput
             // 
-            this.gauSigmaInput.Location = new System.Drawing.Point(119, 39);
+            this.gauSigmaInput.Location = new System.Drawing.Point(205, 17);
             this.gauSigmaInput.Name = "gauSigmaInput";
-            this.gauSigmaInput.Size = new System.Drawing.Size(86, 20);
+            this.gauSigmaInput.Size = new System.Drawing.Size(22, 20);
             this.gauSigmaInput.TabIndex = 1;
             this.gauSigmaInput.Text = "2";
             // 
             // gauSizeInput
             // 
-            this.gauSizeInput.Location = new System.Drawing.Point(7, 39);
+            this.gauSizeInput.Location = new System.Drawing.Point(84, 17);
             this.gauSizeInput.Name = "gauSizeInput";
-            this.gauSizeInput.Size = new System.Drawing.Size(94, 20);
+            this.gauSizeInput.Size = new System.Drawing.Size(25, 20);
             this.gauSizeInput.TabIndex = 0;
             this.gauSizeInput.Text = "11";
             // 
             // progressUpdate
             // 
             this.progressUpdate.AutoSize = true;
-            this.progressUpdate.Location = new System.Drawing.Point(1047, 16);
+            this.progressUpdate.Location = new System.Drawing.Point(1046, 11);
             this.progressUpdate.Name = "progressUpdate";
             this.progressUpdate.Size = new System.Drawing.Size(87, 13);
             this.progressUpdate.TabIndex = 11;

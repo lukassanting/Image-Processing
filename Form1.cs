@@ -76,7 +76,7 @@ namespace INFOIBV
             // Call functions by checking which item in the functionSelector ComboBox is selected, then call that function
 
             byte[,] workingImage = convertToGrayscale(Image);          // convert image to grayscale
-            int[] inHisto = computeHistogram(workingImage);            // compute the histogram of the input image for use in different functions
+            int[] inHisto = computeHistogram(workingImage);            // compute the histogram of the input image for use in various functions
             int[] cumulativeHisto = cumulativeHistogram(inHisto);      // compute  the cumulative histogram for use in different functions
 
             //if new image is loaded after histogram equalization, reset the histogram labels
@@ -92,7 +92,7 @@ namespace INFOIBV
             if (functionSelector.SelectedIndex == 2)
             {
                 if (useMAC.Checked) workingImage = adjustContrastModified(workingImage, cumulativeHisto); // apply modified ca if checkbox is checked
-                else workingImage = adjustContrast(workingImage, inHisto);
+                else workingImage = adjustContrast(workingImage, inHisto); // otherwise apply standard contrast adjustment
             }
 
             if (functionSelector.SelectedIndex == 3)
@@ -104,7 +104,7 @@ namespace INFOIBV
             }
 
             if (functionSelector.SelectedIndex == 4)
-                workingImage = convolveImage(workingImage, createBoxFilter(5), 5);
+                workingImage = convolveImage(workingImage, createBoxFilter(5), 5); // convolve image with 5 x 5 box filter
 
             if (functionSelector.SelectedIndex == 5)
             {
@@ -123,7 +123,7 @@ namespace INFOIBV
 
             }
 
-            if (functionSelector.SelectedIndex == 6)
+            if (functionSelector.SelectedIndex == 6) // calculate edge magnitude of image with optional pre & post processing
             {
                 if (edgeGaussianCheck.Checked) // Use gaussian filter to remove noise before processing
                 {
@@ -131,7 +131,7 @@ namespace INFOIBV
                     workingImage = (convolveImage(workingImage, createGaussianFilter(gaussianOut.Item1, gaussianOut.Item2), gaussianOut.Item1));
                 }
 
-                workingImage = edgeMagnitude(workingImage, horizontalSobel(), verticalSobel());
+                workingImage = edgeMagnitude(workingImage, horizontalSobel(), verticalSobel()); //calculate edge magnitude with Sobel filters
 
                 if (edPipeline.Checked) //Use Contrast Adjustment to make edges clearer
                 {
@@ -140,7 +140,7 @@ namespace INFOIBV
                 }
             }
 
-            if (functionSelector.SelectedIndex == 7) //threshold image using input value
+            if (functionSelector.SelectedIndex == 7) // threshold image using input value
                 workingImage = thresholdImage(workingImage);
 
             if (functionSelector.SelectedIndex == 8) // edge sharpening using LaPlace algorithm 
@@ -154,36 +154,35 @@ namespace INFOIBV
                 workingImage = edgeSharpening(workingImage);
             }
 
-
-            // ==================== END OF YOUR FUNCTION CALLS ====================
-            // ====================================================================
-
+            // refresh histogram labels (in case histogram equalization was previosuly applied and changed the labels)
             outputHistogramBox.Text = "Output Histogram Data";
             outputHistogramBox.Update();
 
             if (functionSelector.SelectedIndex != 9)
-                printOutputHistogram(computeHistogram(workingImage)); //calculate and then print the output histogram (for single channel images, the steps are split for above functions)
+                printOutputHistogram(computeHistogram(workingImage)); //calculate and then print the output histogram
             else workingImage = histogramEqualization(workingImage, cumulativeHisto);
 
             progressUpdate.Text = "Printing to bitmap...";
             progressUpdate.Refresh();
 
+            // ==================== END OF YOUR FUNCTION CALLS ====================
+            // ====================================================================
+            
             // copy array to output Bitmap
             for (int x = 0; x < workingImage.GetLength(0); x++)             // loop over columns
                 for (int y = 0; y < workingImage.GetLength(1); y++)         // loop over rows
                 {
                     Color newColor = Color.FromArgb(workingImage[x, y], workingImage[x, y], workingImage[x, y]);
-                    OutputImage.SetPixel(x, y, newColor);                  // set the pixel color at coordinate (x,y)
+                    OutputImage.SetPixel(x, y, newColor);                   // set the pixel color at coordinate (x,y)
                 }
             
             pictureBox2.Image = (Image)OutputImage;                         // display output image
-            progressBar.Visible = false;                                    // Hide progress bar
+            progressBar.Visible = false;                                    // hide progress bar
 
-            progressUpdate.Text = "Task completed.";
+            progressUpdate.Text = "Task completed.";                        // update label
             progressUpdate.Refresh();
         }
-
-
+        
         /*
          * saveButton_Click: process when user clicks "Save" button
          */
@@ -240,7 +239,7 @@ namespace INFOIBV
 
             int width = inputImage.GetLength(0);
             int height = inputImage.GetLength(1);
-            // create temporary grayscale image
+
             byte[,] tempImage = new byte[width, height];
 
             for (int i = 0; i < width; i++)
@@ -261,7 +260,6 @@ namespace INFOIBV
          * input:   inputImage          single-channel (byte) image
          * output:  tempImage           single-channel (byte) image
          */
-        
         private byte[,] adjustContrast(byte[,] inputImage, int[] histogram)
         {
             progressUpdate.Text = "Adjusting contrast of image...";
@@ -286,9 +284,6 @@ namespace INFOIBV
                 if (histogram[255 - i] > 0 && (255 - i) > high) high = (255-i);
             }
 
-            Console.WriteLine(low);
-            Console.WriteLine(high);
-
             // rescale pixel values
             for (int i = 0; i < width; i++)
             {
@@ -300,13 +295,12 @@ namespace INFOIBV
             }
 
             return tempImage;
-
         }
 
         /*
          * adjustContrastModified: create an image with the full range of intensity values used where highest and lowest values are saturated
          * input:   inputImage          single-channel (byte) image
-         * output:  tempImage           single-channel (byte) image
+         * output:  tempImage           single-channel (byte) image with adjusted contrast
          */
         private byte[,] adjustContrastModified(byte[,] inputImage, int[] cumulative)
         {
@@ -318,7 +312,7 @@ namespace INFOIBV
             int height = inputImage.GetLength(1);
             byte[,] tempImage = new byte[width, height];
 
-            // quantiles: taken from input, default values currently based on trial and error
+            // quantiles: taken from input, check for correct types else set to default
             double q_low, q_high;
             if (double.TryParse(lowQInput.Text, out double lowQ) && lowQ >= 0 && lowQ <= 100)
             {
@@ -345,6 +339,7 @@ namespace INFOIBV
                 q_high = 0.005;
                 MessageBox.Show("Combined q-values cannot exceed 100%. Values set to default.");
             }
+
             // intialise a_low to be high and a_high to be low
             double a_low = 3000;
             double a_high = -3000;
@@ -373,7 +368,7 @@ namespace INFOIBV
                         tempImage[i, j] = (byte)(a_min + ((inputImage[i, j] - a_low) * ((a_max - a_min) / (a_high - a_low))));
                     }
 
-                    progressBar.PerformStep();                              // Increment progress bar
+                    progressBar.PerformStep();                                  // Increment progress bar
                 }
             }
 
@@ -385,7 +380,7 @@ namespace INFOIBV
          * createGaussianFilter: create a Gaussian filter of specific square size and with a specified sigma
          * input:   size                length and width of the Gaussian filter (only odd sizes)
          *          sigma               standard deviation of the Gaussian distribution
-         * output:                      Gaussian filter
+         * output:  float[,]            Gaussian filter
          */
         private float[,] createGaussianFilter(byte size, float sigma)
         {
@@ -418,6 +413,11 @@ namespace INFOIBV
             return filter;
         }
 
+        /*
+         * createBoxFilter: creates a simple box filter of 1 values surrounded by a border of 0 values
+         * input:   size                length and width of the filter
+         * output:  float[,]            box filter
+         */
         private float[,] createBoxFilter(byte size)
         {
             progressUpdate.Text = "Creating Box filter...";
@@ -439,7 +439,6 @@ namespace INFOIBV
                     }
                 }
 
-
             // normalise filter
             for (int i = -radius; i <= radius; i++)
                 for (int j = -radius; j <= radius; j++)
@@ -452,7 +451,7 @@ namespace INFOIBV
          * convolveImage: apply linear filtering of an input image
          * input:   inputImage          single-channel (byte) image
          *          filter              linear kernel (must be square)
-         * output:                      single-channel (byte) image
+         * output:  byte[,]             single-channel (byte) image after filtering
          */
         private byte[,] convolveImage(byte[,] inputImage, float[,] filter, byte size)
         {
@@ -546,7 +545,6 @@ namespace INFOIBV
             // trim extend border away before returning image
             return trimBorder(extendedImage, size);
         }
-
 
         /*
          * edgeMagnitude: calculate the image derivative of an input image and a provided edge kernel
@@ -832,6 +830,7 @@ namespace INFOIBV
 
             return tempImage;
         }
+
         /*
          * histogramEqualization: equalize the (cumulative) histogram of an image, print both original and equalized histograms, and return new image
          * input:   inputImage          single-channel (byte) image
@@ -854,7 +853,7 @@ namespace INFOIBV
                     tempImage[i, j] = (byte)Math.Floor(cumulative[image[i, j]] * (255.0 / (width * height)));
                 }
 
-            // update visual histograms
+            // update visual histograms & labels
             int[] histogramNew = computeHistogram(tempImage);
             int[] cumulativeNew = cumulativeHistogram(histogramNew);
 
@@ -911,8 +910,6 @@ namespace INFOIBV
 
         /*
          * printColourHistogram: convert a three-channel color image to a histogram and print it to the input chart
-         * input:   inputImage          three-channel (Color) image
-         * output:  void
          */
         private void printColourHistogram(Color[,] image) //Takes a color image, averages the colours to make and print a histogram
         {
@@ -945,9 +942,7 @@ namespace INFOIBV
         }
 
         /*
-         * printHistogram: takea given histogram and print it to the output chart (one for input, one for output)
-         * input:   histogram          histogram of an image 
-         * output:  void
+         * printHistogram: take a given histogram and print it to the output chart (one for input, one for output)
          */
         private void printInputHistogram(int[] histogram) //Takes a histogram and prints it
         {
