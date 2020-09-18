@@ -179,7 +179,7 @@
             "0. Grayscale conversion",
             "1. Inversion",
             "2. Contrast adjustment",
-            "3. :Linear (Gaussian) filtering",
+            "3. Linear (Gaussian) filtering",
             "4. Linear (Box) filtering",
             "5. Nonlinear (Median) filtering",
             "6. Edge detection",
