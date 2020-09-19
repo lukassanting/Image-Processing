@@ -28,10 +28,10 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea3 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Series series3 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea4 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Series series4 = new System.Windows.Forms.DataVisualization.Charting.Series();
             this.LoadImageButton = new System.Windows.Forms.Button();
             this.openImageDialog = new System.Windows.Forms.OpenFileDialog();
             this.imageFileName = new System.Windows.Forms.TextBox();
@@ -85,6 +85,13 @@
             this.label20 = new System.Windows.Forms.Label();
             this.label21 = new System.Windows.Forms.Label();
             this.maxDynRangeOut = new System.Windows.Forms.Label();
+            this.colourOptionsBox = new System.Windows.Forms.GroupBox();
+            this.redMixIn = new System.Windows.Forms.TextBox();
+            this.greenMixIn = new System.Windows.Forms.TextBox();
+            this.blueMixIn = new System.Windows.Forms.TextBox();
+            this.label13 = new System.Windows.Forms.Label();
+            this.label15 = new System.Windows.Forms.Label();
+            this.label16 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.inputHistogram)).BeginInit();
@@ -94,6 +101,7 @@
             this.caBox.SuspendLayout();
             this.inputHistogramBox.SuspendLayout();
             this.outputHistogramBox.SuspendLayout();
+            this.colourOptionsBox.SuspendLayout();
             this.SuspendLayout();
             // 
             // LoadImageButton
@@ -194,30 +202,31 @@
             // 
             // inputHistogram
             // 
-            chartArea1.Name = "ChartArea1";
-            this.inputHistogram.ChartAreas.Add(chartArea1);
+            chartArea3.Name = "ChartArea1";
+            this.inputHistogram.ChartAreas.Add(chartArea3);
             this.inputHistogram.Location = new System.Drawing.Point(269, 563);
             this.inputHistogram.Name = "inputHistogram";
-            series1.ChartArea = "ChartArea1";
-            series1.Name = "Output";
-            this.inputHistogram.Series.Add(series1);
+            series3.ChartArea = "ChartArea1";
+            series3.Name = "Output";
+            this.inputHistogram.Series.Add(series3);
             this.inputHistogram.Size = new System.Drawing.Size(258, 245);
             this.inputHistogram.TabIndex = 8;
             // 
             // outputHistogram
             // 
-            chartArea2.Name = "ChartArea1";
-            this.outputHistogram.ChartAreas.Add(chartArea2);
+            chartArea4.Name = "ChartArea1";
+            this.outputHistogram.ChartAreas.Add(chartArea4);
             this.outputHistogram.Location = new System.Drawing.Point(531, 563);
             this.outputHistogram.Name = "outputHistogram";
-            series2.ChartArea = "ChartArea1";
-            series2.Name = "Input";
-            this.outputHistogram.Series.Add(series2);
+            series4.ChartArea = "ChartArea1";
+            series4.Name = "Input";
+            this.outputHistogram.Series.Add(series4);
             this.outputHistogram.Size = new System.Drawing.Size(258, 246);
             this.outputHistogram.TabIndex = 9;
             // 
             // optionsBox
             // 
+            this.optionsBox.Controls.Add(this.colourOptionsBox);
             this.optionsBox.Controls.Add(this.edgeBox);
             this.optionsBox.Controls.Add(this.caBox);
             this.optionsBox.Controls.Add(this.thresholdInput);
@@ -622,6 +631,72 @@
             this.maxDynRangeOut.TabIndex = 14;
             this.maxDynRangeOut.Text = "##";
             // 
+            // colourOptionsBox
+            // 
+            this.colourOptionsBox.Controls.Add(this.label16);
+            this.colourOptionsBox.Controls.Add(this.label15);
+            this.colourOptionsBox.Controls.Add(this.label13);
+            this.colourOptionsBox.Controls.Add(this.blueMixIn);
+            this.colourOptionsBox.Controls.Add(this.greenMixIn);
+            this.colourOptionsBox.Controls.Add(this.redMixIn);
+            this.colourOptionsBox.Location = new System.Drawing.Point(21, 300);
+            this.colourOptionsBox.Name = "colourOptionsBox";
+            this.colourOptionsBox.Size = new System.Drawing.Size(200, 56);
+            this.colourOptionsBox.TabIndex = 16;
+            this.colourOptionsBox.TabStop = false;
+            this.colourOptionsBox.Text = "Colour";
+            // 
+            // redMixIn
+            // 
+            this.redMixIn.Location = new System.Drawing.Point(31, 19);
+            this.redMixIn.Name = "redMixIn";
+            this.redMixIn.Size = new System.Drawing.Size(31, 20);
+            this.redMixIn.TabIndex = 0;
+            this.redMixIn.Text = "0.3";
+            // 
+            // greenMixIn
+            // 
+            this.greenMixIn.Location = new System.Drawing.Point(97, 19);
+            this.greenMixIn.Name = "greenMixIn";
+            this.greenMixIn.Size = new System.Drawing.Size(31, 20);
+            this.greenMixIn.TabIndex = 1;
+            this.greenMixIn.Text = "0.59";
+            // 
+            // blueMixIn
+            // 
+            this.blueMixIn.Location = new System.Drawing.Point(163, 19);
+            this.blueMixIn.Name = "blueMixIn";
+            this.blueMixIn.Size = new System.Drawing.Size(31, 20);
+            this.blueMixIn.TabIndex = 2;
+            this.blueMixIn.Text = "0.11";
+            // 
+            // label13
+            // 
+            this.label13.AutoSize = true;
+            this.label13.Location = new System.Drawing.Point(8, 22);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(18, 13);
+            this.label13.TabIndex = 3;
+            this.label13.Text = "R:";
+            // 
+            // label15
+            // 
+            this.label15.AutoSize = true;
+            this.label15.Location = new System.Drawing.Point(139, 22);
+            this.label15.Name = "label15";
+            this.label15.Size = new System.Drawing.Size(17, 13);
+            this.label15.TabIndex = 4;
+            this.label15.Text = "B:";
+            // 
+            // label16
+            // 
+            this.label16.AutoSize = true;
+            this.label16.Location = new System.Drawing.Point(73, 22);
+            this.label16.Name = "label16";
+            this.label16.Size = new System.Drawing.Size(18, 13);
+            this.label16.TabIndex = 5;
+            this.label16.Text = "G:";
+            // 
             // INFOIBV
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -659,6 +734,8 @@
             this.inputHistogramBox.PerformLayout();
             this.outputHistogramBox.ResumeLayout(false);
             this.outputHistogramBox.PerformLayout();
+            this.colourOptionsBox.ResumeLayout(false);
+            this.colourOptionsBox.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -721,6 +798,13 @@
         private System.Windows.Forms.CheckBox edgeGaussianCheck;
         private System.Windows.Forms.GroupBox edgeBox;
         private System.Windows.Forms.CheckBox edPipeline;
+        private System.Windows.Forms.GroupBox colourOptionsBox;
+        private System.Windows.Forms.Label label16;
+        private System.Windows.Forms.Label label15;
+        private System.Windows.Forms.Label label13;
+        private System.Windows.Forms.TextBox blueMixIn;
+        private System.Windows.Forms.TextBox greenMixIn;
+        private System.Windows.Forms.TextBox redMixIn;
     }
 }
 

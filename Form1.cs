@@ -56,6 +56,8 @@ namespace INFOIBV
             OutputImage = new Bitmap(imageWidth, imageHeight); // create new output image
             Color[,] Image = new Color[imageWidth, imageHeight]; // create array to speed-up operations (Bitmap functions are very slow)
 
+            if (!correctColours()) MessageBox.Show("Please using valid mixing coefficients. Using default values.");
+
             // copy input Bitmap to array            
             for (int x = 0; x < InputImage.Size.Width; x++)                 // loop over columns
                 for (int y = 0; y < InputImage.Size.Height; y++)            // loop over rows
@@ -73,9 +75,12 @@ namespace INFOIBV
             // Alternatively you can create buttons to invoke certain functionality
             // ====================================================================
 
+            string imageType = typeCheck(Image); // return whether image is colour, grayscale or binary
+            Color[,] workingImage = Image;
+
             // Call functions by checking which item in the functionSelector ComboBox is selected, then call that function
 
-            byte[,] workingImage = convertToGrayscale(Image);          // convert image to grayscale
+            //byte[,] workingImage = convertToGrayscale(Image);          // convert image to grayscale
             int[] inHisto = computeHistogram(workingImage);            // compute the histogram of the input image for use in various functions
             int[] cumulativeHisto = cumulativeHistogram(inHisto);      // compute  the cumulative histogram for use in different functions
 
@@ -86,13 +91,25 @@ namespace INFOIBV
 
             //no case for functionSelector index 0, as this is conversion to grayscale
 
+            if (functionSelector.SelectedIndex == 0)
+            {
+                if (imageType == "colour")
+                {
+                    workingImage = convertColourToGrayscale(Image);          // convert image to grayscale
+                    imageType = "grayscale";
+                }
+                else MessageBox.Show("Image is already either grayscale or binary");
+            }
+
+            byte[,] tempImage = convertToGrayscale(workingImage);
+
             if (functionSelector.SelectedIndex == 1)
-                workingImage = invertImage(workingImage);
+                tempImage = invertImage(tempImage);
 
             if (functionSelector.SelectedIndex == 2)
             {
-                if (useMAC.Checked) workingImage = adjustContrastModified(workingImage, cumulativeHisto); // apply modified ca if checkbox is checked
-                else workingImage = adjustContrast(workingImage, inHisto); // otherwise apply standard contrast adjustment
+                if (useMAC.Checked) tempImage = adjustContrastModified(tempImage, cumulativeHisto); // apply modified ca if checkbox is checked
+                else tempImage = adjustContrast(tempImage, inHisto); // otherwise apply standard contrast adjustment
             }
 
             if (functionSelector.SelectedIndex == 3)
@@ -100,11 +117,11 @@ namespace INFOIBV
                 Tuple<byte, float> gaussianOut = gaussianCheck(); // get sigma size and float size from textbox values
 
                 //convolve image on image, gaussian filter, and filter size
-                workingImage = (convolveImage(workingImage, createGaussianFilter(gaussianOut.Item1, gaussianOut.Item2), gaussianOut.Item1));
+                tempImage = (convolveImage(tempImage, createGaussianFilter(gaussianOut.Item1, gaussianOut.Item2), gaussianOut.Item1));
             }
 
             if (functionSelector.SelectedIndex == 4)
-                workingImage = convolveImage(workingImage, createBoxFilter(5), 5); // convolve image with 5 x 5 box filter
+                tempImage = convolveImage(tempImage, createBoxFilter(5), 5); // convolve image with 5 x 5 box filter
 
             if (functionSelector.SelectedIndex == 5)
             {
@@ -119,7 +136,7 @@ namespace INFOIBV
                     median = 7;
                     MessageBox.Show("Please insert a valid median size value. Median size set to 7.");
                 }
-                workingImage = medianFilter(workingImage, median);
+                tempImage = medianFilter(tempImage, median);
 
             }
 
@@ -128,20 +145,20 @@ namespace INFOIBV
                 if (edgeGaussianCheck.Checked) // Use gaussian filter to remove noise before processing
                 {
                     Tuple<byte, float> gaussianOut = gaussianCheck();
-                    workingImage = (convolveImage(workingImage, createGaussianFilter(gaussianOut.Item1, gaussianOut.Item2), gaussianOut.Item1));
+                    tempImage = (convolveImage(tempImage, createGaussianFilter(gaussianOut.Item1, gaussianOut.Item2), gaussianOut.Item1));
                 }
 
-                workingImage = edgeMagnitude(workingImage, horizontalSobel(), verticalSobel()); //calculate edge magnitude with Sobel filters
+                tempImage = edgeMagnitude(tempImage, horizontalSobel(), verticalSobel()); //calculate edge magnitude with Sobel filters
 
                 if (edPipeline.Checked) //Use Contrast Adjustment to make edges clearer
                 {
                     int[] cumulative = cumulativeHistogram(computeHistogram(workingImage));
-                    workingImage = adjustContrastModified(workingImage, cumulative);
+                    tempImage = adjustContrastModified(tempImage, cumulative);
                 }
             }
 
             if (functionSelector.SelectedIndex == 7) // threshold image using input value
-                workingImage = thresholdImage(workingImage);
+                tempImage = thresholdImage(tempImage);
 
             if (functionSelector.SelectedIndex == 8) // edge sharpening using LaPlace algorithm 
             {
@@ -149,9 +166,9 @@ namespace INFOIBV
                 if (edgeGaussianCheck.Checked)
                 {
                     Tuple<byte, float> gaussianOut = gaussianCheck();
-                    workingImage = (convolveImage(workingImage, createGaussianFilter(gaussianOut.Item1, gaussianOut.Item2), gaussianOut.Item1));
+                    tempImage = (convolveImage(tempImage, createGaussianFilter(gaussianOut.Item1, gaussianOut.Item2), gaussianOut.Item1));
                 }
-                workingImage = edgeSharpening(workingImage);
+                tempImage = edgeSharpening(tempImage);
             }
 
             // refresh histogram labels (in case histogram equalization was previosuly applied and changed the labels)
@@ -172,7 +189,7 @@ namespace INFOIBV
             for (int x = 0; x < workingImage.GetLength(0); x++)             // loop over columns
                 for (int y = 0; y < workingImage.GetLength(1); y++)         // loop over rows
                 {
-                    Color newColor = Color.FromArgb(workingImage[x, y], workingImage[x, y], workingImage[x, y]);
+                    Color newColor = Color.FromArgb(workingImage[x, y].R, workingImage[x, y].G, workingImage[x, y].B);
                     OutputImage.SetPixel(x, y, newColor);                   // set the pixel color at coordinate (x,y)
                 }
             
@@ -191,6 +208,37 @@ namespace INFOIBV
             if (OutputImage == null) return;                                // get out if no output image
             if (saveImageDialog.ShowDialog() == DialogResult.OK)
                 OutputImage.Save(saveImageDialog.FileName);                 // save the output image
+        }
+
+        private Color[,] convertColourToGrayscale(Color[,] inputImage)
+        {
+            progressUpdate.Text = "Converting image to grayscale...";
+            progressUpdate.Refresh();
+
+            // create temporary grayscale image of the same size as input, with a single channel
+            Color[,] tempImage = new Color[inputImage.GetLength(0), inputImage.GetLength(1)];
+
+            double redVal = double.Parse(redMixIn.Text);
+            double greenVal = double.Parse(greenMixIn.Text);
+            double blueVal = double.Parse(blueMixIn.Text);
+
+            // process all pixels in the image
+            for (int x = 0; x < InputImage.Size.Width; x++)                 // loop over columns
+                for (int y = 0; y < InputImage.Size.Height; y++)            // loop over rows
+                {
+                    Color pixelColour = inputImage[x, y];                    // get pixel color
+                    int colourMix = (int)((pixelColour.R * redVal) + (pixelColour.G * greenVal) + (pixelColour.B * blueVal));
+                    Color weighted = Color.FromArgb(
+                        colourMix,
+                        colourMix,
+                        colourMix);
+                    tempImage[x, y] = weighted;                              // set the new pixel color at coordinate (x,y)
+                    progressBar.PerformStep();                              // increment progress bar
+                }
+
+            progressBar.Visible = false;                                    // hide progress bar
+
+            return tempImage;
         }
 
         /*
@@ -836,21 +884,26 @@ namespace INFOIBV
          * input:   inputImage          single-channel (byte) image
          *          cumulative          one-dimensional (int) array: the cumulative histogram of image 
          * output:  tempImage           single-channel (byte) image with equalized histogram
+         * 
+         *  COLOUR STATUS: WORKING BUT NOT IDEAL
          */
-        private byte[,] histogramEqualization(byte[,] image, int[] cumulative)
+        private Color[,] histogramEqualization(Color[,] image, int[] cumulative)
         {
             progressUpdate.Text = "Equalizing histograms...";
             progressUpdate.Refresh();
 
             int width = image.GetLength(0);
             int height = image.GetLength(1);
-            byte[,] tempImage = new byte[width, height];
+            Color[,] tempImage = new Color[width, height];
 
             // calculate image with equalized histogram
             for (int i = 0; i < width; i++)
                 for (int j = 0; j < height; j++)
                 {
-                    tempImage[i, j] = (byte)Math.Floor(cumulative[image[i, j]] * (255.0 / (width * height)));
+                    int newRed = (int)Math.Floor(cumulative[image[i, j].R] * (255.0 / (width * height)));
+                    int newGreen = (int)Math.Floor(cumulative[image[i, j].G] * (255.0 / (width * height)));
+                    int newBlue = (int)Math.Floor(cumulative[image[i, j].B] * (255.0 / (width * height)));
+                    tempImage[i, j] = Color.FromArgb(newRed, newGreen, newBlue);
                 }
 
             // update visual histograms & labels
@@ -873,7 +926,7 @@ namespace INFOIBV
          * input:   image          single-channel (byte) image
          * output:  histogram      256 array of histogram values
          */
-        private int[] computeHistogram(byte[,] image)
+        private int[] computeHistogram(Color[,] image)
         {
             progressUpdate.Text = "Computing histogram of image...";
             progressUpdate.Refresh();
@@ -884,8 +937,9 @@ namespace INFOIBV
             {
                 for (int j = 0; j < image.GetLength(1); j++)
                 {
-                    byte pixelValue = image[i, j]; // get value of output channel
-                    histogram[pixelValue]++; // increase that values histogram entry by one
+                    Color pixelColor = image[i, j];                    // get pixel color
+                    byte average = (byte)((pixelColor.R + pixelColor.B + pixelColor.G) / 3); // calculate average over the three channels
+                    histogram[average]++; // increase that values histogram entry by one
                 }
             }
 
@@ -1047,7 +1101,55 @@ namespace INFOIBV
             maxDynRangeOut.Update();
             maxContrastOut.Update();
         }
+        private string typeCheck(Color[,] image)
+        {
+            // loop over image
+            for (int i = 0; i < image.GetLength(0); i++)
+                for (int j = 0; j < image.GetLength(1); j++)
+                {
+                    Color pixelColour = image[i, j];
+                    if ((pixelColour.R != pixelColour.G) || (pixelColour.G != pixelColour.B)) return "colour"; // if there are two or more channels, the image is in colour
+                }
 
+            // if no pixel is in two or more channels, then the image is in grayscale or is binary (has max two values0
+            int firstColour = image[0, 0].R;
+            int secondColour = -1;
+            for (int i = 1; i < image.GetLength(0); i++)
+                for (int j = 0; j < image.GetLength(1); j++)
+                {
+                    Color pixelColour = image[i, j];
+                    if (pixelColour.R != firstColour)
+                    {
+                        if (secondColour == -1) secondColour = pixelColour.R; // if second colour has not been assigned but is found, assign second colour
+                        else if (pixelColour.R != secondColour) return "grayscale"; //if pixel is neither first nor second colour, image is in grayscale
+                    }
+                }
+            return "binary";
+        }
+        private bool correctColours()
+        {
+            if (double.TryParse(redMixIn.Text, out double tryRed) && (tryRed >= 0) && (tryRed <= 1))
+                if (double.TryParse(greenMixIn.Text, out double tryGreen) && (tryGreen >= 0) && (tryGreen <= 1))
+                    if (double.TryParse(blueMixIn.Text, out double tryBlue) && (tryBlue >= 0) && (tryBlue <= 1))
+                    {
+                        double total = tryRed + tryGreen + tryBlue;
+                        Console.WriteLine(total);
+                        if (total < 1.000001 && total > 0.9999999) // Need to make sure the values are equal to 1, which doesn't work with doubles & ints
+                        {
+                            return true;
+                        }
+                    }
+
+            redMixIn.Text = "0.3";
+            greenMixIn.Text = "0.59";
+            blueMixIn.Text = "0.11";
+
+            redMixIn.Update();
+            greenMixIn.Update();
+            blueMixIn.Update();
+            return false;
+
+        }
 
         // ====================================================================
         // ============= YOUR FUNCTIONS FOR ASSIGNMENT 2 GO HERE ==============
