@@ -106,10 +106,10 @@ namespace INFOIBV
             if (functionSelector.SelectedIndex == 1) // invert image by pixelcolour
                 workingImage = invertImage(workingImage);
 
-            if (functionSelector.SelectedIndex == 2) // !!! not colour implemented
+            if (functionSelector.SelectedIndex == 2) 
             {
-                if (useMAC.Checked) tempImage = adjustContrastModified(tempImage, cumulativeHisto); // apply modified ca if checkbox is checked
-                else tempImage = adjustContrast(tempImage, inHisto); // otherwise apply standard contrast adjustment
+                if (useMAC.Checked) workingImage = adjustContrastModified(workingImage, cumulativeHisto); // apply modified ca if checkbox is checked
+                else workingImage = adjustContrast(workingImage, inHisto); // otherwise apply standard contrast adjustment
             }
 
             if (functionSelector.SelectedIndex == 3) // !!! not colour implemented
@@ -154,7 +154,7 @@ namespace INFOIBV
                 if (edPipeline.Checked) //Use Contrast Adjustment to make edges clearer
                 {
                     int[] cumulative = cumulativeHistogram(computeHistogram(workingImage));
-                    tempImage = adjustContrastModified(tempImage, cumulative);
+                    workingImage = adjustContrastModified(workingImage, cumulative);
                 }
             }
 
@@ -306,7 +306,7 @@ namespace INFOIBV
          * input:   inputImage          single-channel (byte) image
          * output:  tempImage           single-channel (byte) image
          */
-        private byte[,] adjustContrast(byte[,] inputImage, int[] histogram)
+        private Color[,] adjustContrast(Color[,] inputImage, int[] histogram)
         {
             progressUpdate.Text = "Adjusting contrast of image...";
             progressUpdate.Refresh();
@@ -314,7 +314,7 @@ namespace INFOIBV
             // create temporary grayscale image
             int width = inputImage.GetLength(0);
             int height = inputImage.GetLength(1);
-            byte[,] tempImage = new byte[width, height];
+            Color[,] tempImage = new Color[width, height];
 
             // if these values are ints instead of doubles, then the image does not scale correctly
             double low = 3000;
@@ -335,7 +335,12 @@ namespace INFOIBV
             {
                 for (int j = 0; j < height; j++)
                 {
-                    tempImage[i, j] = (byte)(min + ((inputImage[i, j] - low) * ((max - min) / (high - low))));
+                    int redValue = Convert.ToInt32(min + ((inputImage[i, j].R - low) * ((max - min) / (high - low))));
+                    int greenValue = Convert.ToInt32(min + ((inputImage[i, j].G - low) * ((max - min) / (high - low))));
+                    int blueValue = Convert.ToInt32(min + ((inputImage[i, j].B - low) * ((max - min) / (high - low))));
+                    //some values were coming up greater than 255 for certain colour images (somehow - must look into this), so temporarily clamping them
+                    if (redValue > 255) redValue = 255; if (greenValue > 255) greenValue = 255; if (blueValue > 255) blueValue = 255;
+                    tempImage[i, j] = Color.FromArgb(redValue, greenValue, blueValue);
                     progressBar.PerformStep();
                 }
             }
@@ -348,7 +353,7 @@ namespace INFOIBV
          * input:   inputImage          single-channel (byte) image
          * output:  tempImage           single-channel (byte) image with adjusted contrast
          */
-        private byte[,] adjustContrastModified(byte[,] inputImage, int[] cumulative)
+        private Color[,] adjustContrastModified(Color[,] inputImage, int[] cumulative)
         {
             progressUpdate.Text = "Using advanced techniques to adjust contrast...";
             progressUpdate.Refresh();
@@ -356,7 +361,7 @@ namespace INFOIBV
             // create temporary grayscale image
             int width = inputImage.GetLength(0);
             int height = inputImage.GetLength(1);
-            byte[,] tempImage = new byte[width, height];
+            Color[,] tempImage = new Color[width, height];
 
             // quantiles: taken from input, check for correct types else set to default
             double q_low, q_high;
@@ -366,7 +371,7 @@ namespace INFOIBV
             }
             else
             {
-                q_low = 0.025;
+                q_low = 0.005;
                 MessageBox.Show("Please insert a valid low quantile value. Default set to 2.5%");
             }
             if (double.TryParse(highQInput.Text, out double highQ) && highQ >= 0 && highQ <= 100)
@@ -381,7 +386,7 @@ namespace INFOIBV
 
             if ((q_high + q_low) > 1)
             {
-                q_low = 0.025;
+                q_low = 0.005;
                 q_high = 0.005;
                 MessageBox.Show("Combined q-values cannot exceed 100%. Values set to default.");
             }
@@ -407,12 +412,30 @@ namespace INFOIBV
             {
                 for (int j = 0; j < height; j++)
                 {
-                    if (inputImage[i, j] >= a_high) tempImage[i, j] = 255;      // everything above high margin gets set to max value (255)
-                    else if (inputImage[i, j] <= a_low) tempImage[i, j] = 0;    // everything below low margin gets set to min value (0)
-                    else                                                        // everything else is between high and low margins and gets scaled linearly to max and min values
+                    // change red value
+                    if (inputImage[i, j].R >= a_high) tempImage[i, j] = Color.FromArgb(255, tempImage[i,j].G, tempImage[i, j].B);      // everything above high margin gets set to max value (255)
+                    else if (inputImage[i, j].R <= a_low) tempImage[i, j] = Color.FromArgb(0, tempImage[i, j].G, tempImage[i, j].B);    // everything below low margin gets set to min value (0)
+                    else  // everything else is between high and low margins and gets scaled linearly to max and min values
                     {
-                        tempImage[i, j] = (byte)(a_min + ((inputImage[i, j] - a_low) * ((a_max - a_min) / (a_high - a_low))));
+                        tempImage[i, j] = Color.FromArgb(Convert.ToInt32((a_min + ((inputImage[i, j].R - a_low) * ((a_max - a_min) / (a_high - a_low))))), tempImage[i, j].G, tempImage[i, j].B);
                     }
+
+                    // change green
+                    if (inputImage[i, j].G >= a_high) tempImage[i, j] = Color.FromArgb(tempImage[i, j].R, 255, tempImage[i, j].B);      // everything above high margin gets set to max value (255)
+                    else if (inputImage[i, j].G <= a_low) tempImage[i, j] = Color.FromArgb(tempImage[i, j].R, 0, tempImage[i, j].B);    // everything below low margin gets set to min value (0)
+                    else  // everything else is between high and low margins and gets scaled linearly to max and min values
+                    {
+                        tempImage[i, j] = Color.FromArgb(tempImage[i, j].R, Convert.ToInt32((a_min + ((inputImage[i, j].G - a_low) * ((a_max - a_min) / (a_high - a_low))))), tempImage[i, j].B);
+                    }
+
+                    // change blue
+                    if (inputImage[i, j].B >= a_high) tempImage[i, j] = Color.FromArgb(tempImage[i, j].R, tempImage[i, j].G, 255);      // everything above high margin gets set to max value (255)
+                    else if (inputImage[i, j].B <= a_low) tempImage[i, j] = Color.FromArgb(tempImage[i, j].R, tempImage[i, j].G, 0);    // everything below low margin gets set to min value (0)
+                    else  // everything else is between high and low margins and gets scaled linearly to max and min values
+                    {
+                        tempImage[i, j] = Color.FromArgb(tempImage[i, j].R, tempImage[i, j].G, Convert.ToInt32((a_min + ((inputImage[i, j].B - a_low) * ((a_max - a_min) / (a_high - a_low))))));
+                    }
+
 
                     progressBar.PerformStep();                                  // Increment progress bar
                 }
