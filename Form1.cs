@@ -95,24 +95,24 @@ namespace INFOIBV
             {
                 if (imageType == "colour")
                 {
-                    workingImage = convertColourToGrayscale(Image);          // convert image to grayscale
+                    workingImage = convertColourToGrayscale(Image); // convert image to grayscale
                     imageType = "grayscale";
                 }
                 else MessageBox.Show("Image is already either grayscale or binary");
             }
 
-            byte[,] tempImage = convertToGrayscale(workingImage);
+            byte[,] tempImage = convertToGrayscale(workingImage); // !!! temp code to keep non-colour-implemented functions from creating bugs
 
-            if (functionSelector.SelectedIndex == 1)
-                tempImage = invertImage(tempImage);
+            if (functionSelector.SelectedIndex == 1) // invert image by pixelcolour
+                workingImage = invertImage(workingImage);
 
-            if (functionSelector.SelectedIndex == 2)
+            if (functionSelector.SelectedIndex == 2) // !!! not colour implemented
             {
                 if (useMAC.Checked) tempImage = adjustContrastModified(tempImage, cumulativeHisto); // apply modified ca if checkbox is checked
                 else tempImage = adjustContrast(tempImage, inHisto); // otherwise apply standard contrast adjustment
             }
 
-            if (functionSelector.SelectedIndex == 3)
+            if (functionSelector.SelectedIndex == 3) // !!! not colour implemented
             {
                 Tuple<byte, float> gaussianOut = gaussianCheck(); // get sigma size and float size from textbox values
 
@@ -120,7 +120,7 @@ namespace INFOIBV
                 tempImage = (convolveImage(tempImage, createGaussianFilter(gaussianOut.Item1, gaussianOut.Item2), gaussianOut.Item1));
             }
 
-            if (functionSelector.SelectedIndex == 4)
+            if (functionSelector.SelectedIndex == 4) // !!! not colour implemented
                 tempImage = convolveImage(tempImage, createBoxFilter(5), 5); // convolve image with 5 x 5 box filter
 
             if (functionSelector.SelectedIndex == 5)
@@ -140,7 +140,8 @@ namespace INFOIBV
 
             }
 
-            if (functionSelector.SelectedIndex == 6) // calculate edge magnitude of image with optional pre & post processing
+            // calculate edge magnitude of image with optional pre & post processing
+            if (functionSelector.SelectedIndex == 6)  // !!! not colour implemented
             {
                 if (edgeGaussianCheck.Checked) // Use gaussian filter to remove noise before processing
                 {
@@ -157,10 +158,11 @@ namespace INFOIBV
                 }
             }
 
-            if (functionSelector.SelectedIndex == 7) // threshold image using input value
-                tempImage = thresholdImage(tempImage);
+            if (functionSelector.SelectedIndex == 7) // threshold image using input value 
+                workingImage = thresholdImage(workingImage);
 
-            if (functionSelector.SelectedIndex == 8) // edge sharpening using LaPlace algorithm 
+            // edge sharpening using LaPlace algorithm 
+            if (functionSelector.SelectedIndex == 8) // !!! not colour implemented
             {
                 // Use gaussian filter to remove noise before processing
                 if (edgeGaussianCheck.Checked)
@@ -225,9 +227,8 @@ namespace INFOIBV
             // process all pixels in the image
             for (int x = 0; x < InputImage.Size.Width; x++)                 // loop over columns
                 for (int y = 0; y < InputImage.Size.Height; y++)            // loop over rows
-                {
-                    Color pixelColour = inputImage[x, y];                    // get pixel color
-                    int colourMix = (int)((pixelColour.R * redVal) + (pixelColour.G * greenVal) + (pixelColour.B * blueVal));
+                {  
+                    int colourMix = Convert.ToInt32(combineColours(inputImage[x,y])); // get & average pixel color
                     Color weighted = Color.FromArgb(
                         colourMix,
                         colourMix,
@@ -248,9 +249,6 @@ namespace INFOIBV
          */
         private byte[,] convertToGrayscale(Color[,] inputImage)
         {
-            progressUpdate.Text = "Converting image to grayscale...";
-            progressUpdate.Refresh();
-
             // create temporary grayscale image of the same size as input, with a single channel
             byte[,] tempImage = new byte[inputImage.GetLength(0), inputImage.GetLength(1)];
 
@@ -280,7 +278,7 @@ namespace INFOIBV
          * input:   inputImage          single-channel (byte) image
          * output:  tempImage           single-channel (byte) image, with inverted values
          */
-        private byte[,] invertImage(byte[,] inputImage)
+        private Color[,] invertImage(Color[,] inputImage)
         {
             progressUpdate.Text = "Inverting image...";
             progressUpdate.Refresh();
@@ -288,13 +286,13 @@ namespace INFOIBV
             int width = inputImage.GetLength(0);
             int height = inputImage.GetLength(1);
 
-            byte[,] tempImage = new byte[width, height];
+            Color[,] tempImage = new Color[width, height];
 
             for (int i = 0; i < width; i++)
             {
                 for (int j = 0; j < height; j++)
                 {
-                    tempImage[i, j] = (byte)(255 - inputImage[i, j]);       // invert pixel value
+                    tempImage[i, j] = Color.FromArgb((255 - inputImage[i, j].R), (255 - inputImage[i,j].G), (255 - inputImage[i,j].B)); // invert pixel values
                     progressBar.PerformStep();                              // increment progress bar
                 }
             }
@@ -648,7 +646,7 @@ namespace INFOIBV
          * input:   inputImage          single-channel (byte) image
          * output:  tempImage           single-channel (byte) image with on/off values
          */
-        private byte[,] thresholdImage(byte[,] inputImage)
+        private Color[,] thresholdImage(Color[,] inputImage)
         {
             progressUpdate.Text = "Thresholding image...";
             progressUpdate.Refresh();
@@ -656,21 +654,22 @@ namespace INFOIBV
             // create temporary grayscale image
             int width = inputImage.GetLength(0);
             int height = inputImage.GetLength(1);
-            byte[,] tempImage = new byte[width, height];
+            Color[,] tempImage = new Color[width, height];
 
             // default threshold: find the average of the pixel values by summing them and dividing them by width x height
-            int sum = 0;
+            double sum = 0d;
             
             for(int i = 0; i < width; i++)
             {
                 for (int j = 0; j < height; j++)
                 {
-                    sum += inputImage[i, j];
+                    double pixelValue = combineColours(inputImage[i, j]);
+                    sum += pixelValue;
                     progressBar.PerformStep();                              // increment progress bar
                 }
             }
 
-            int threshold = sum / (width * height);
+            int threshold = Convert.ToInt32(sum / (width * height));
 
             // check if there is an input for threshold
             if (thresholdInput.Text != "mean")
@@ -687,11 +686,12 @@ namespace INFOIBV
             {
                 for (int j = 0; j < height; j++)
                 {
-                    if (inputImage[i, j] < threshold)
+                    double pixelValue = combineColours(inputImage[i, j]);
+                    if (pixelValue < threshold)
                     {
-                        tempImage[i, j] = 0;
+                        tempImage[i, j] = Color.FromArgb(0, 0, 0);
                     }
-                    else tempImage[i, j] = 255;
+                    else tempImage[i, j] = Color.FromArgb(255, 255, 255);
                     progressBar.PerformStep();                              // increment progress bar
                 }
             }
@@ -919,6 +919,18 @@ namespace INFOIBV
             printOutputHistogram(cumulativeNew);
 
             return tempImage;
+        }
+
+        private double combineColours(Color pixel)
+        {
+            double redMix = double.Parse(redMixIn.Text);
+            double greenMix = double.Parse(greenMixIn.Text);
+            double blueMix = double.Parse(blueMixIn.Text);
+
+            int red = pixel.R; int green = pixel.G; int blue = pixel.B;
+
+            double average = (redMix * red) + (greenMix * green) + (blueMix * blue);
+            return average;
         }
 
         /*
