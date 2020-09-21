@@ -76,12 +76,20 @@ namespace INFOIBV
             // ====================================================================
 
             string imageType = typeCheck(Image); // return whether image is colour, grayscale or binary
+
+            imageTypeLabel.Text = "Image type = " + imageType;
+            imageTypeLabel.Update();
+
             Color[,] workingImage = Image;
 
             // Call functions by checking which item in the functionSelector ComboBox is selected, then call that function
 
-            //byte[,] workingImage = convertToGrayscale(Image);          // convert image to grayscale
-            int[] inHisto = computeHistogram(workingImage);            // compute the histogram of the input image for use in various functions
+            //make correct (input) histogram for image
+            int[] inHisto;
+            if (imageType == "colour")
+                inHisto = computeColourHistogram(workingImage);
+            else
+                inHisto = computeHistogram(workingImage);
             int[] cumulativeHisto = cumulativeHistogram(inHisto);      // compute  the cumulative histogram for use in different functions
 
             //if new image is loaded after histogram equalization, reset the histogram labels
@@ -112,22 +120,22 @@ namespace INFOIBV
                 else workingImage = adjustContrast(workingImage, inHisto); // otherwise apply standard contrast adjustment
             }
 
-            if (functionSelector.SelectedIndex == 3) // !!! not colour implemented
+            if (functionSelector.SelectedIndex == 3) // sort of colour implemented, not satisfied
             {
                 Tuple<byte, float> gaussianOut = gaussianCheck(); // get sigma size and float size from textbox values
 
                 //convolve image on image, gaussian filter, and filter size
-                tempImage = (convolveImage(tempImage, createGaussianFilter(gaussianOut.Item1, gaussianOut.Item2), gaussianOut.Item1));
+                workingImage = (convolveImage(workingImage, createGaussianFilter(gaussianOut.Item1, gaussianOut.Item2), gaussianOut.Item1));
             }
 
-            if (functionSelector.SelectedIndex == 4) // !!! not colour implemented
-                tempImage = convolveImage(tempImage, createBoxFilter(5), 5); // convolve image with 5 x 5 box filter
+            if (functionSelector.SelectedIndex == 4) // sort of colour implemented, not satisfied
+                workingImage = convolveImage(workingImage, createBoxFilter(5), 5); // convolve image with 5 x 5 box filter
 
             if (functionSelector.SelectedIndex == 5)
             {
                 int median;
                 //find gaussian size from input
-                if (int.TryParse(medSizeInput.Text, out int medSize) && medSize >= 5 && !(medSize % 2 == 0))
+                if (int.TryParse(medSizeInput.Text, out int medSize) && medSize >= 3 && !(medSize % 2 == 0))
                 {
                     median = (byte)(medSize);
                 }
@@ -136,7 +144,7 @@ namespace INFOIBV
                     median = 7;
                     MessageBox.Show("Please insert a valid median size value. Median size set to 7.");
                 }
-                tempImage = medianFilter(tempImage, median);
+                //tempImage = medianFilter(tempImage, median);
 
             }
 
@@ -146,10 +154,10 @@ namespace INFOIBV
                 if (edgeGaussianCheck.Checked) // Use gaussian filter to remove noise before processing
                 {
                     Tuple<byte, float> gaussianOut = gaussianCheck();
-                    tempImage = (convolveImage(tempImage, createGaussianFilter(gaussianOut.Item1, gaussianOut.Item2), gaussianOut.Item1));
+                    workingImage = (convolveImage(workingImage, createGaussianFilter(gaussianOut.Item1, gaussianOut.Item2), gaussianOut.Item1));
                 }
 
-                tempImage = edgeMagnitude(tempImage, horizontalSobel(), verticalSobel()); //calculate edge magnitude with Sobel filters
+                //tempImage = edgeMagnitude(tempImage, horizontalSobel(), verticalSobel()); //calculate edge magnitude with Sobel filters
 
                 if (edPipeline.Checked) //Use Contrast Adjustment to make edges clearer
                 {
@@ -168,9 +176,9 @@ namespace INFOIBV
                 if (edgeGaussianCheck.Checked)
                 {
                     Tuple<byte, float> gaussianOut = gaussianCheck();
-                    tempImage = (convolveImage(tempImage, createGaussianFilter(gaussianOut.Item1, gaussianOut.Item2), gaussianOut.Item1));
+                    workingImage = (convolveImage(workingImage, createGaussianFilter(gaussianOut.Item1, gaussianOut.Item2), gaussianOut.Item1));
                 }
-                tempImage = edgeSharpening(tempImage);
+                //tempImage = edgeSharpening(tempImage);
             }
 
             // refresh histogram labels (in case histogram equalization was previosuly applied and changed the labels)
@@ -178,8 +186,14 @@ namespace INFOIBV
             outputHistogramBox.Update();
 
             if (functionSelector.SelectedIndex != 9)
-                printOutputHistogram(computeHistogram(workingImage)); //calculate and then print the output histogram
-            else workingImage = histogramEqualization(workingImage, cumulativeHisto);
+            {
+                if (imageType == "colour")
+                    printOutputHistogram(computeColourHistogram(workingImage));
+                else
+                    printOutputHistogram(computeHistogram(workingImage)); //calculate and then print the output histogram
+            }
+            else
+                workingImage = histogramEqualization(workingImage, cumulativeHisto, imageType);
 
             progressUpdate.Text = "Printing to bitmap...";
             progressUpdate.Refresh();
@@ -522,42 +536,45 @@ namespace INFOIBV
          *          filter              linear kernel (must be square)
          * output:  byte[,]             single-channel (byte) image after filtering
          */
-        private byte[,] convolveImage(byte[,] inputImage, float[,] filter, byte size)
+        private Color[,] convolveImage(Color[,] inputImage, float[,] filter, byte size)
         {
-
-            //extend border of image by radius of filter size, extend pixel each direction
-            byte[,] extendedImage = extendBorder(inputImage, size);
+            Color[,] extendedImage = extendBorder(inputImage, size); //extend border of image by radius of filter size, extend pixel each direction
 
             progressUpdate.Text = "Filtering image...";
             progressUpdate.Refresh();
 
-            //set int values
+            // set int values
             int radius = (size - 1) / 2;
             int width = extendedImage.GetLength(0);
             int height = extendedImage.GetLength(1);
-            byte[,] tempImage = (byte[,])extendedImage.Clone();
+            Color[,] tempImage = (Color[,])extendedImage.Clone();
 
-            //loop over image
+            // loop over image
             for (int i = radius; i < (width - radius); i++)
                 for (int j = radius; j < (height - radius); j++)
                 {
                     // Get values from input image
-                    byte[,] inputValues = new byte[size, size]; 
+                    Color[,] inputValues = new Color[size, size]; 
                     for (int x = -radius; x <= radius; x++)
                         for (int y = -radius; y <= radius; y++)
                             inputValues[x + radius, y + radius] = tempImage[i + x, j + y];
 
-                    double sum = 0d;
+                    // apply filter values to image input values
+                    int sumRed = 0;  int sumGreen = 0; int sumBlue = 0;
                     for (int x = -radius; x <= radius; x++)
                         for (int y = -radius; y <= radius; y++)
-                            sum += filter[x + radius, y + radius] * inputValues[x + radius, y + radius];
+                        {
+                            sumRed += Convert.ToInt32(filter[x + radius, y + radius] * inputValues[x + radius, y + radius].R);   // sum values of filter applied to red values
+                            sumGreen += Convert.ToInt32(filter[x + radius, y + radius] * inputValues[x + radius, y + radius].G); // sum values of filter applied to green values
+                            sumBlue += Convert.ToInt32(filter[x + radius, y + radius] * inputValues[x + radius, y + radius].B);  // sum values of filter applied to blue values
+                        }
 
-                    extendedImage[i,j] = (byte)(sum);
+
+                    extendedImage[i, j] = Color.FromArgb(sumRed, sumGreen, sumBlue); // add back into colour images
                     progressBar.PerformStep();
                 }
 
-            // trim extend border away before returning image
-            return trimBorder(extendedImage, size);
+            return trimBorder(extendedImage, size); // trim extend border away before returning image
         }
 
 
@@ -571,7 +588,8 @@ namespace INFOIBV
         {
 
             //extend border of image by radius of filter size, extend pixel each direction
-            byte[,] extendedImage = extendBorder(inputImage, size);
+            //byte[,] extendedImage = extendBorder(inputImage, size); //TEMP
+            byte[,] extendedImage = inputImage; //TEMP
 
             progressUpdate.Text = "Applying median filter to image...";
             progressUpdate.Refresh();
@@ -612,7 +630,8 @@ namespace INFOIBV
                 }
 
             // trim extend border away before returning image
-            return trimBorder(extendedImage, size);
+            //return trimBorder(extendedImage, size); //TEMP
+            return extendedImage; //TEMP
         }
 
         /*
@@ -625,7 +644,8 @@ namespace INFOIBV
         private byte[,] edgeMagnitude(byte[,] inputImage, sbyte[,] horizontalKernel, sbyte[,] verticalKernel)
         {
 
-            byte[,] extendedImage = extendBorder(inputImage, 3);
+            //byte[,] extendedImage = extendBorder(inputImage, 3); //TEMP
+            byte[,] extendedImage = inputImage; //TEMP
             int width = extendedImage.GetLength(0);
             int height = extendedImage.GetLength(1);
             // create temporary grayscale image
@@ -661,7 +681,8 @@ namespace INFOIBV
                     extendedImage[i, j] = (byte)(Math.Sqrt((xSum * xSum) + (ySum * ySum)));
                 }
 
-            return trimBorder(extendedImage, 3);
+            // return trimBorder(extendedImage, 3); //TEMP
+            return extendedImage; //TEMP
         }
 
         /*
@@ -729,14 +750,15 @@ namespace INFOIBV
          */
         private byte[,] edgeSharpening(byte[,] inputImage)
         {
-            byte[,] extendedImage = extendBorder(inputImage, 3);
+            //byte[,] extendedImage = extendBorder(inputImage, 3); //TEMP
+            byte[,] extendedImage = inputImage; //TEMP
             byte[,] tempImage = (byte[,])extendedImage.Clone();
             int width = extendedImage.GetLength(0);
             int height = extendedImage.GetLength(1);
             int radius = 1;
             double weight;
 
-            if (double.TryParse(edgeSharpW.Text, out double weightIn) && weightIn > 0 && weightIn < 1.000001)
+            if (double.TryParse(edgeSharpW.Text, out double weightIn) && weightIn > 0d && weightIn < 1.000001d)
             {
                 weight = weightIn;
             }
@@ -772,7 +794,8 @@ namespace INFOIBV
 
                     extendedImage[i, j] = (byte)(tempImage[i, j] - (weight * sum)); //sharpen and apply to image
                 }
-            return trimBorder(extendedImage, 3);
+            //return trimBorder(extendedImage, 3); //TEMP
+            return extendedImage; //TEMP
         }
 
         // gaussianCheck: reads gaussian kernel values from textbox inputs, makes sure inputs are valid, and returns inputs (or defaults)
@@ -781,7 +804,7 @@ namespace INFOIBV
             byte gaussian;
             float sigma;
             //find gaussian size from input
-            if (byte.TryParse(gauSizeInput.Text, out byte gaussSize) && gaussSize >= 5 && !(gaussSize % 2 == 0))
+            if (byte.TryParse(gauSizeInput.Text, out byte gaussSize) && gaussSize >= 3 && !(gaussSize % 2 == 0))
             {
                 gaussian = gaussSize;
             }
@@ -823,7 +846,7 @@ namespace INFOIBV
          * input:   inputImage          single-channel (byte) image
          * output:  tempImage           single-channel (byte) image with extended border
          */
-        private byte[,] extendBorder(byte[,] inputImage, int size)
+        private Color[,] extendBorder(Color[,] inputImage, int size)
         {
             progressUpdate.Text = "Extending border of image...";
             progressUpdate.Refresh();
@@ -832,7 +855,7 @@ namespace INFOIBV
 
             int width = inputImage.GetLength(0); // width = width of original image (NOT extended)
             int height = inputImage.GetLength(1); // height = height of original image (NOT extended)
-            byte[,] tempImage = new byte[width + (2 * radius), height + (2 * radius)]; //new temp image with room for padding
+            Color[,] tempImage = new Color[width + (2 * radius), height + (2 * radius)]; //new temp image with room for padding
 
             for (int i = 0; i < width; i++)
             {
@@ -879,7 +902,7 @@ namespace INFOIBV
          * input:   inputImage          single-channel (byte) image
          * output:  tempImage           single-channel (byte) image with trimmed border
          */
-        private byte[,] trimBorder(byte[,] inputImage, int size)
+        private Color[,] trimBorder(Color[,] inputImage, int size)
         {
             progressUpdate.Text = "Trimming border of image...";
             progressUpdate.Refresh();
@@ -888,7 +911,7 @@ namespace INFOIBV
 
             int width = inputImage.GetLength(0);  // width = width of extended image (NOT original)
             int height = inputImage.GetLength(1); // height = height of extended image (NOT original)
-            byte[,] tempImage = new byte[width - (2 * radius), height - (2 * radius)]; //new temp image of correct output size
+            Color[,] tempImage = new Color[width - (2 * radius), height - (2 * radius)]; //new temp image of correct output size
 
             for (int i = 0; i < (width - (2 * radius)); i++)
             {
@@ -910,7 +933,7 @@ namespace INFOIBV
          * 
          *  COLOUR STATUS: WORKING BUT NOT IDEAL
          */
-        private Color[,] histogramEqualization(Color[,] image, int[] cumulative)
+        private Color[,] histogramEqualization(Color[,] image, int[] cumulative, string imageType)
         {
             progressUpdate.Text = "Equalizing histograms...";
             progressUpdate.Refresh();
@@ -930,7 +953,12 @@ namespace INFOIBV
                 }
 
             // update visual histograms & labels
-            int[] histogramNew = computeHistogram(tempImage);
+            int[] histogramNew;
+            if (imageType == "colour")
+                histogramNew = computeColourHistogram(tempImage);
+            else
+                histogramNew = computeHistogram(tempImage);
+
             int[] cumulativeNew = cumulativeHistogram(histogramNew);
 
             inputHistogramBox.Text = "Original Cumulative Histogram";
@@ -1000,40 +1028,33 @@ namespace INFOIBV
         /*
          * printColourHistogram: convert a three-channel color image to a histogram and print it to the input chart
          */
-        private void printColourHistogram(Color[,] image) //Takes a color image, averages the colours to make and print a histogram
+        private int[] computeColourHistogram(Color[,] image)
         {
-            progressUpdate.Text = "Computing histograms of image...";
+            progressUpdate.Text = "Computing histogram of image...";
             progressUpdate.Refresh();
 
-            Series series = new Series();
-            series.ChartType = SeriesChartType.Column;
-            int[] histoValues = new int[256];
-            inputHistogram.Series.Clear();
-            series.Name = "Output Histogram";
-            inputHistogram.Series.Add(series);
-
-
+            int[] histogram = new int[256];
 
             for (int i = 0; i < image.GetLength(0); i++)
             {
                 for (int j = 0; j < image.GetLength(1); j++)
                 {
-                    Color pixelColor = image[i, j];                    // get pixel color
-                    byte average = (byte)((pixelColor.R + pixelColor.B + pixelColor.G) / 3); // calculate average over the three channels
-                    histoValues[average]++; // increase that values histogram entry by one
+                    double redMix = double.Parse(redMixIn.Text);
+                    double greenMix = double.Parse(greenMixIn.Text);
+                    double blueMix = double.Parse(blueMixIn.Text);
+
+                    int red = image[i, j].R; int green = image[i, j].G; int blue = image[i, j].B;
+                    byte combined = (byte)((red * redMix) + (green * greenMix) + (blue * blueMix)); // calculate average over the three channels
+                    histogram[combined]++; // increase that values histogram entry by one
                 }
             }
-
-            for (int i = 0; i < 256; i++)
-            {
-                inputHistogram.Series["Output Histogram"].Points.AddXY(i + 1, histoValues[i]); // add each value to the actual histogram
-            }
+            return histogram;
         }
-
-        /*
-         * printHistogram: take a given histogram and print it to the output chart (one for input, one for output)
-         */
-        private void printInputHistogram(int[] histogram) //Takes a histogram and prints it
+        
+            /*
+             * printHistogram: take a given histogram and print it to the output chart (one for input, one for output)
+             */
+            private void printInputHistogram(int[] histogram) //Takes a histogram and prints it
         {
             Series series = new Series();
             series.ChartType = SeriesChartType.Column;
