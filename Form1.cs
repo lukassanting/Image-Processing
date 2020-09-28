@@ -197,29 +197,29 @@ namespace INFOIBV
             if (functionSelector.SelectedIndex == 10) // erosion
             {
                 int size = Convert.ToInt32(morphoSizeIn.Text);                              // currently breaks if not an int, need to make checks
-                int[,] structure = createStructuringElement(size, morphoShapeIn.Text);     // currenty all false if not right shape, need to make checks
-                workingImage = trimBorder(erodeImage(extendBorder(workingImage, size), structure), size); // extend border of image, erode image, trim border of image
+                int[,] structure = createStructuringElement(size, morphoShapeIn.Text, imageType);     // currenty all false if not right shape, need to make checks
+                workingImage = trimBorder(erodeImage(extendBorder(workingImage, size), structure, imageType), size); // extend border of image, erode image, trim border of image
             }
 
             if (functionSelector.SelectedIndex == 11) // dilation
             {
                 int size = Convert.ToInt32(morphoSizeIn.Text);                              // currently breaks if not an int, need to make checks
-                int[,] structure = createStructuringElement(size, morphoShapeIn.Text);     // currenty all false if not right shape, need to make checks
-                workingImage = trimBorder(dilateImage(extendBorder(workingImage, size), structure), size); // extend border of image, dilate image, trim border of image
+                int[,] structure = createStructuringElement(size, morphoShapeIn.Text, imageType);     // currenty all false if not right shape, need to make checks
+                workingImage = trimBorder(dilateImage(extendBorder(workingImage, size), structure, imageType), size); // extend border of image, dilate image, trim border of image
             }
 
             if (functionSelector.SelectedIndex == 12) // opening
             {
                 int size = Convert.ToInt32(morphoSizeIn.Text);                              // currently breaks if not an int, need to make checks
-                int[,] structure = createStructuringElement(size, morphoShapeIn.Text);     // currenty all false if not right shape, need to make checks
-                workingImage = trimBorder(openImage(extendBorder(workingImage, size), structure), size); // extend border of image, open image, trim border of image
+                int[,] structure = createStructuringElement(size, morphoShapeIn.Text, imageType);     // currenty all false if not right shape, need to make checks
+                workingImage = trimBorder(openImage(extendBorder(workingImage, size), structure, imageType), size); // extend border of image, open image, trim border of image
             }
 
             if (functionSelector.SelectedIndex == 13) // closing
             {
                 int size = Convert.ToInt32(morphoSizeIn.Text);                              // currently breaks if not an int, need to make checks
-                int[,] structure = createStructuringElement(size, morphoShapeIn.Text);     // currenty all false if not right shape, need to make checks
-                workingImage = trimBorder(closeImage(extendBorder(workingImage, size), structure), size); // extend border of image, close image, trim border of image
+                int[,] structure = createStructuringElement(size, morphoShapeIn.Text, imageType);     // currenty all false if not right shape, need to make checks
+                workingImage = trimBorder(closeImage(extendBorder(workingImage, size), structure, imageType), size); // extend border of image, close image, trim border of image
             }
 
             // refresh histogram labels (in case histogram equalization was previosuly applied and changed the labels)
@@ -903,7 +903,6 @@ namespace INFOIBV
                 for (int j = 0; j < height; j++)
                 {
                     tempImage[i + radius, j + radius] = inputImage[i, j]; // add original image to centre of bigger image
-                    progressBar.PerformStep();
                 }
             }
 
@@ -920,7 +919,6 @@ namespace INFOIBV
                 {
                     tempImage[j, i + radius] = inputImage[0, i]; // left column
                     tempImage[(radius + width) + j, i + radius] = inputImage[width - 1, i];   // right column
-                    progressBar.PerformStep();
                 }
             //padding corners
             for (int i = 0; i < radius; i++)
@@ -1353,30 +1351,47 @@ namespace INFOIBV
             int size = structuringElement.GetLength(0);                                         // assume element is square
             int radius = (size - 1) / 2;
             int width = inputImage.GetLength(0); int height = inputImage.GetLength(1);    // define length and width based on extended image
-            Color[,] outputImage = new Color[width, height];
+            Color[,] outputImage = (Color[,])inputImage.Clone();
 
             for (int i = radius; i < (width  -radius); i++)
                 for (int j = radius; j < (height - radius); j++)
                 {
-                    outputImage[i, j] = inputImage[i, j];
-                    if (inputImage[i, j].R < 1)  // image pixel is foreground ---- 0 (black) = foreground, so 255 (white) = background
+                    // put input pixel values into new array
+                    int[,] inputPixels = new int[size, size];
+                    for (int x = -radius; x <= radius; x++)
+                        for (int y = -radius; y <= radius; y++)
+                            inputPixels[x + radius, y + radius] = (inputImage[i + x, j + y].R);
+
+                    // apply erosion to image
+                    if (type == "binary")
                     {
-                        outputImage[i, j] = Color.FromArgb(0, 0, 0); // set default of output to foreground
-
-                        // put input pixel values into new array
-                        int[,] inputPixels = new int[size, size];
-                        for (int x = -radius; x <= radius; x++)
-                            for (int y = -radius; y <= radius; y++)
-                                inputPixels[x + radius, y + radius] = (inputImage[i + x, j + y].R);
-
-                        // apply erosion to image
+                        if (inputImage[i, j].R < 1)  // image pixel is foreground ---- 0 (black) = foreground, so 255 (white) = background
+                            for (int x = -radius; x <= radius; x++)
+                                for (int y = -radius; y <= radius; y++)
+                                    {
+                                        if (structuringElement[x + radius, y + radius] < 1)         // kernel has foreground
+                                            if (inputPixels[x + radius, y + radius] > 0)            // image has background
+                                                outputImage[i, j] = Color.FromArgb(255, 255, 255);  // so hotspot pixel on ouput is eroded (set to background)
+                                    }
+                    }
+                    if (type == "grayscale")
+                    {
+                        int[] erosionArray = new int[size * size];
+                        int counter = 0;
                         for (int x = -radius; x <= radius; x++)
                             for (int y = -radius; y <= radius; y++)
                             {
-                                if (structuringElement[x + radius, y + radius] < 1)         // kernel has foreground
-                                    if (inputPixels[x + radius, y + radius] > 0)            // image has background
-                                        outputImage[i, j] = Color.FromArgb(255, 255, 255);  // so hotspot pixel on ouput is eroded (set to background)
+                                if (structuringElement[x + radius, y + radius] != -1)
+                                {
+                                    erosionArray[counter] = inputPixels[x + radius, y + radius] - structuringElement[x + radius, y + radius]; // make array of subtracted values
+                                }
+                                else erosionArray[counter] = 200; //case: str elem has a -1 and is not counted: set value high so no default 0's will become minimum val
+                                counter++;
+
                             }
+                        int min = erosionArray.Min();
+                        if (min < 0) min = 0; //clamp negative 
+                        outputImage[i, j] = Color.FromArgb(min, min, min);
                     }
                 }
 
@@ -1402,17 +1417,39 @@ namespace INFOIBV
             for (int i = radius; i < (width - radius); i++)
                 for (int j = radius; j < (height - radius); j++)
                 {
-                    if (inputImage[i, j].R < 1)  // image pixel is foreground ---- 0 (black) = foreground, so 255 (white) = background
-                    {
-                        outputImage[i, j] = Color.FromArgb(0, 0, 0); // set default of output to foreground
+                    // put input pixel values into new array
+                    int[,] inputPixels = new int[size, size];
+                    for (int x = -radius; x <= radius; x++)
+                        for (int y = -radius; y <= radius; y++)
+                            inputPixels[x + radius, y + radius] = (inputImage[i + x, j + y].R);
 
-                        // apply dilation to image
+                    // apply erosion to image
+                    if (type == "binary")
+                    {
+                        if (inputImage[i, j].R < 1)  // image pixel is foreground ---- 0 (black) = foreground, so 255 (white) = background
+                            for (int x = -radius; x <= radius; x++)
+                                for (int y = -radius; y <= radius; y++)
+                                {
+                                    if (structuringElement[x + radius, y + radius] < 1)             // kernel has foreground
+                                        outputImage[i + x, j + y] = Color.FromArgb(0, 0, 0);  // so kernel is 'copied' to image
+                                }
+                    }
+                    if (type == "grayscale")
+                    {
+                        int[] dilationArray = new int[size * size];
+                        int counter = 0;
                         for (int x = -radius; x <= radius; x++)
                             for (int y = -radius; y <= radius; y++)
                             {
-                                if (structuringElement[x + radius, y + radius] < 1)             // kernel has foreground
-                                    outputImage[i + x, j + y] = Color.FromArgb(0, 0, 0);  // so kernel is 'copied' to image
+                                if (structuringElement[x + radius, y + radius] != -1)
+                                {
+                                    dilationArray[counter] = inputPixels[x + radius, y + radius] + structuringElement[x + radius, y + radius]; // make array of subtracted values
+                                    counter++;
+                                }
                             }
+                        int max = dilationArray.Max();
+                        if (max > 255) max = 255; //clamp negative 
+                        outputImage[i, j] = Color.FromArgb(max, max, max);
                     }
                 }
 
