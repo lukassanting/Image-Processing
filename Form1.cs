@@ -185,6 +185,43 @@ namespace INFOIBV
                 workingImage = edgeSharpening(workingImage);
             }
 
+            if (functionSelector.SelectedIndex >= 10 && functionSelector.SelectedIndex >= 13)
+            {
+                if (morphoShapeIn.Text == "Choose Shape")                 // Ensure a function is chosen
+                {
+                    morphoShapeIn.SelectedIndex = 0; // set default to plus
+                    morphoShapeIn.Update();
+                }
+            }
+
+            if (functionSelector.SelectedIndex == 10) // erosion
+            {
+                int size = Convert.ToInt32(morphoSizeIn.Text);                              // currently breaks if not an int, need to make checks
+                int[,] structure = createStructuringElement(size, morphoShapeIn.Text);     // currenty all false if not right shape, need to make checks
+                workingImage = trimBorder(erodeImage(extendBorder(workingImage, size), structure), size); // extend border of image, erode image, trim border of image
+            }
+
+            if (functionSelector.SelectedIndex == 11) // dilation
+            {
+                int size = Convert.ToInt32(morphoSizeIn.Text);                              // currently breaks if not an int, need to make checks
+                int[,] structure = createStructuringElement(size, morphoShapeIn.Text);     // currenty all false if not right shape, need to make checks
+                workingImage = trimBorder(dilateImage(extendBorder(workingImage, size), structure), size); // extend border of image, dilate image, trim border of image
+            }
+
+            if (functionSelector.SelectedIndex == 12) // opening
+            {
+                int size = Convert.ToInt32(morphoSizeIn.Text);                              // currently breaks if not an int, need to make checks
+                int[,] structure = createStructuringElement(size, morphoShapeIn.Text);     // currenty all false if not right shape, need to make checks
+                workingImage = trimBorder(openImage(extendBorder(workingImage, size), structure), size); // extend border of image, open image, trim border of image
+            }
+
+            if (functionSelector.SelectedIndex == 13) // closing
+            {
+                int size = Convert.ToInt32(morphoSizeIn.Text);                              // currently breaks if not an int, need to make checks
+                int[,] structure = createStructuringElement(size, morphoShapeIn.Text);     // currenty all false if not right shape, need to make checks
+                workingImage = trimBorder(closeImage(extendBorder(workingImage, size), structure), size); // extend border of image, close image, trim border of image
+            }
+
             // refresh histogram labels (in case histogram equalization was previosuly applied and changed the labels)
             outputHistogramBox.Text = "Output Histogram Data";
             outputHistogramBox.Update();
@@ -894,7 +931,6 @@ namespace INFOIBV
                     tempImage[(radius + width) + i, j] = tempImage[(radius + width) - 1, radius]; //top-right corner
                     tempImage[i, (radius + height) + j] = tempImage[radius, (radius + height) - 1]; //bottom-left corner
                     tempImage[(radius + width) + i, (radius + height) + j] = tempImage[(radius + width) - 1, (radius + height) - 1]; //bottom-right corner
-                    progressBar.PerformStep();
                 }
             }
             
@@ -922,7 +958,6 @@ namespace INFOIBV
                 for (int j = 0; j < (height - (2 * radius)); j++)
                 {
                     outputImage[i, j] = inputImage[i + radius, j + radius]; // add image from within border to new image
-                    progressBar.PerformStep();
                 }
             }
 
@@ -1161,6 +1196,8 @@ namespace INFOIBV
             maxDynRangeOut.Update();
             maxContrastOut.Update();
         }
+
+        // typeCheck: given a Color[,] image, loop over the pixel values to determine whether it is in colour, grayscale, or is binary
         private string typeCheck(Color[,] image)
         {
             // loop over image
@@ -1186,6 +1223,7 @@ namespace INFOIBV
                 }
             return "binary";
         }
+
         private bool correctColours()
         {
             if (double.TryParse(redMixIn.Text, out double tryRed) && (tryRed >= 0) && (tryRed <= 1))
@@ -1193,7 +1231,6 @@ namespace INFOIBV
                     if (double.TryParse(blueMixIn.Text, out double tryBlue) && (tryBlue >= 0) && (tryBlue <= 1))
                     {
                         double total = tryRed + tryGreen + tryBlue;
-                        Console.WriteLine(total);
                         if (total < 1.000001 && total > 0.9999999) // Need to make sure the values are equal to 1, which doesn't work with doubles & ints
                         {
                             return true;
@@ -1215,6 +1252,228 @@ namespace INFOIBV
         // ============= YOUR FUNCTIONS FOR ASSIGNMENT 2 GO HERE ==============
         // ====================================================================
 
+        /*
+         * createStructuringElement: given a size shape, and image type, create a structuring element for a morphological filtering operation
+         * input:   size            int
+         *          shape           string
+         *          type            string
+         * output:  element         int[,]
+         */
+        private int[,] createStructuringElement(int size, string shape, string type = "binary")
+        {
+            int[,] element = new int[size, size];
+            int radius = (size - 1) / 2;
+
+            if (shape == "plus") // plus: only middle row and column are 'on'
+            {
+                if (type == "binary")
+                {
+                    for (int i = -radius; i <= radius; i++)
+                        for (int j = -radius; j <= radius; j++)
+                        {
+                            if (radius + i == radius || radius + j == radius)
+                                element[radius + i, radius + j] = 0;
+                            else element[radius + i, radius + j] = 255;
+                        }
+                }
+                if (type == "grayscale") // scaled, higher value in middle, lower towards edge
+                {
+                    int n = radius + 1;
+                    for (int i = -radius; i <= radius; i++)
+                        for (int j = -radius; j <= radius; j++)
+                        {
+                            if (i == 0 || j == 0)
+                                element[radius + i, radius + j] = n - Math.Max(Math.Abs(i), Math.Abs(j));
+                            else element[radius + i, radius + j] = -1;
+                        }
+                }
+            }
+            else if (shape == "square") // a square of 'on' pixels with a border of 'off' pixels
+            {
+                if (type == "binary")
+                {
+                    for (int i = -radius; i <= radius; i++)
+                        for (int j = -radius; j <= radius; j++)
+                        {
+                            if (Math.Abs(i) == radius || Math.Abs(j) == radius)
+                                element[radius + i, radius + j] = 255;
+                            else element[radius + i, radius + j] = 0;
+                        }
+                }
+                if (type == "grayscale") // scaled, higher value in middle, lower towards edge
+                {
+                    int n = radius + 1;
+                    for (int i = -radius; i <= radius; i++)
+                        for (int j = -radius; j <= radius; j++)
+                        {
+                            element[radius + i, radius + j] = n - Math.Max(Math.Abs(i), Math.Abs(j));
+                        }
+                }
+            }
+            else if (shape == "disk") // the corners are off, the rest is on
+            {
+                if (type == "binary")
+                {
+                    for (int i = -radius; i <= radius; i++)
+                        for (int j = -radius; j <= radius; j++)
+                        {
+                            if (Math.Abs(i) == 2 && Math.Abs(j) == 2)
+                                element[radius + i, radius + j] = 255;
+                            else element[radius + i, radius + j] = 0;
+                        }
+                }
+                if (type == "grayscale") // scaled, higher value in middle, lower towards edge
+                {
+                    int n = radius + 1;
+                    for (int i = -radius; i <= radius; i++)
+                        for (int j = -radius; j <= radius; j++)
+                        {
+                            if (Math.Abs(i) == radius && Math.Abs(j) == radius)
+                                element[radius + i, radius + j] = -1;
+                            else
+                                element[radius + i, radius + j] = n - (Math.Abs(i) + Math.Abs(j));
+                        }
+                }
+            }
+
+            return element;
+        }
+
+        /*
+         * erodeImage: given a Color[,] grayscale or binary image and a structuring element, erode structures in the image
+         * input:   inputImage              Color[,] (grayscale) image
+         *          structuringElement      Int[,] filter
+         * output:  outputImage             Color[,] (grayscale) image
+         */
+        private Color[,] erodeImage(Color[,] inputImage, int[,] structuringElement, string type = "binary")
+        {
+            progressUpdate.Text = "Eroding image...";
+            progressUpdate.Refresh();
+
+            int size = structuringElement.GetLength(0);                                         // assume element is square
+            int radius = (size - 1) / 2;
+            int width = inputImage.GetLength(0); int height = inputImage.GetLength(1);    // define length and width based on extended image
+            Color[,] outputImage = new Color[width, height];
+
+            for (int i = radius; i < (width  -radius); i++)
+                for (int j = radius; j < (height - radius); j++)
+                {
+                    outputImage[i, j] = inputImage[i, j];
+                    if (inputImage[i, j].R < 1)  // image pixel is foreground ---- 0 (black) = foreground, so 255 (white) = background
+                    {
+                        outputImage[i, j] = Color.FromArgb(0, 0, 0); // set default of output to foreground
+
+                        // put input pixel values into new array
+                        int[,] inputPixels = new int[size, size];
+                        for (int x = -radius; x <= radius; x++)
+                            for (int y = -radius; y <= radius; y++)
+                                inputPixels[x + radius, y + radius] = (inputImage[i + x, j + y].R);
+
+                        // apply erosion to image
+                        for (int x = -radius; x <= radius; x++)
+                            for (int y = -radius; y <= radius; y++)
+                            {
+                                if (structuringElement[x + radius, y + radius] < 1)         // kernel has foreground
+                                    if (inputPixels[x + radius, y + radius] > 0)            // image has background
+                                        outputImage[i, j] = Color.FromArgb(255, 255, 255);  // so hotspot pixel on ouput is eroded (set to background)
+                            }
+                    }
+                }
+
+            return outputImage;
+        }
+
+        /*
+         * dilateImage: given a Color[,] grayscale or binary image and a structuring element, dilate structures in the image
+         * input:   inputImage              Color[,] (grayscale) image
+         *          structuringElement      Int[,] filter
+         * output:  outputImage             Color[,] (grayscale) image
+         */
+        private Color[,] dilateImage(Color[,] inputImage, int[,] structuringElement, string type = "binary")
+        {
+            progressUpdate.Text = "Dilating image...";
+            progressUpdate.Refresh();
+
+            int size = structuringElement.GetLength(0);                                         // assume element is square
+            int radius = (size - 1) / 2;
+            int width = inputImage.GetLength(0); int height = inputImage.GetLength(1);    // define length and width based on extended image
+            Color[,] outputImage = (Color[,])inputImage.Clone();
+
+            for (int i = radius; i < (width - radius); i++)
+                for (int j = radius; j < (height - radius); j++)
+                {
+                    if (inputImage[i, j].R < 1)  // image pixel is foreground ---- 0 (black) = foreground, so 255 (white) = background
+                    {
+                        outputImage[i, j] = Color.FromArgb(0, 0, 0); // set default of output to foreground
+
+                        // apply dilation to image
+                        for (int x = -radius; x <= radius; x++)
+                            for (int y = -radius; y <= radius; y++)
+                            {
+                                if (structuringElement[x + radius, y + radius] < 1)             // kernel has foreground
+                                    outputImage[i + x, j + y] = Color.FromArgb(0, 0, 0);  // so kernel is 'copied' to image
+                            }
+                    }
+                }
+
+            return outputImage;
+        }
+
+        /*
+         * openImage: given a Color[,] grayscale or binary image and a structuring element, open structures in the image
+         * input:   inputImage              Color[,] (grayscale) image
+         *          structuringElement      Bool[,] filter
+         * output:  outputImage             Color[,] (grayscale) image
+         */
+        private Color[,] openImage(Color[,] inputImage, int[,] structuringElement, string type = "binary")
+        {
+            Color[,] outputImage = dilateImage(erodeImage(inputImage, structuringElement, type), structuringElement, type);
+            return outputImage;
+        }
+
+        /*
+        * closeImage: given a Color[,] grayscale or binary image and a structuring element, open structures in the image
+        * input:   inputImage              Color[,] (grayscale) image
+        *          structuringElement      Bool[,] filter
+        * output:  outputImage             Color[,] (grayscale) image
+        */
+        private Color[,] closeImage(Color[,] inputImage, int[,] structuringElement, string type = "binary")
+        {
+            Color[,] outputImage = erodeImage(dilateImage(inputImage, structuringElement, type), structuringElement, type);
+            return outputImage;
+        }
+
+       /*
+       * countValues: given a Color[,] grayscale or binary image count the number of distinct values and calculate their histogram
+       * input:   inputImage        Color[,] (grayscale) image
+       * output:  count             number (int) of distinct values
+       *          histogram         histogram (int[]) of distinct values
+       */
+        private Tuple<int, int[]> countValues(Color[,] inputImage)
+        {
+            int count = 0;
+            int[] histogram = new int[count];
+
+            // write code implement value counting and determine count and histogram based on inputImage
+
+            Tuple<int, int[]> output = new Tuple<int, int[]>(count, histogram);
+            return output;
+        }
+
+        private bool[,] reflectElement(bool[,] structuringElement)
+        {
+            bool[,] reflectedElement = new bool[structuringElement.GetLength(0), structuringElement.GetLength(1)];
+            for (int i = 0; i < structuringElement.GetLength(0); i++)
+                for (int j = 0; j < structuringElement.GetLength(1); j++)
+                {
+                    if (structuringElement[i, j])
+                        reflectedElement[j, i] = true;
+                }
+
+            return reflectedElement;
+        }
+
+        // implement boundary trace here (not sure of preferred output format yet)
 
         // ====================================================================
         // ============= YOUR FUNCTIONS FOR ASSIGNMENT 3 GO HERE ==============

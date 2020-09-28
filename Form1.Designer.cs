@@ -28,10 +28,10 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea3 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Series series3 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea4 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Series series4 = new System.Windows.Forms.DataVisualization.Charting.Series();
             this.LoadImageButton = new System.Windows.Forms.Button();
             this.openImageDialog = new System.Windows.Forms.OpenFileDialog();
             this.imageFileName = new System.Windows.Forms.TextBox();
@@ -93,6 +93,12 @@
             this.label21 = new System.Windows.Forms.Label();
             this.maxDynRangeOut = new System.Windows.Forms.Label();
             this.imageTypeLabel = new System.Windows.Forms.Label();
+            this.morphoFiltersBox = new System.Windows.Forms.GroupBox();
+            this.label19 = new System.Windows.Forms.Label();
+            this.label22 = new System.Windows.Forms.Label();
+            this.morphoSizeIn = new System.Windows.Forms.TextBox();
+            this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
+            this.morphoShapeIn = new System.Windows.Forms.ComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.inputHistogram)).BeginInit();
@@ -103,6 +109,7 @@
             this.caBox.SuspendLayout();
             this.inputHistogramBox.SuspendLayout();
             this.outputHistogramBox.SuspendLayout();
+            this.morphoFiltersBox.SuspendLayout();
             this.SuspendLayout();
             // 
             // LoadImageButton
@@ -194,7 +201,14 @@
             "6. Edge detection",
             "7. Thresholding",
             "8. Edge sharpening",
-            "9. Histogram equalization"});
+            "9. Histogram equalization",
+            "10. Erosion",
+            "11. Dilation",
+            "12. Opening",
+            "13. Closing",
+            "14. AND",
+            "15. OR",
+            "16. Boundary Trace"});
             this.functionSelector.Location = new System.Drawing.Point(370, 11);
             this.functionSelector.Name = "functionSelector";
             this.functionSelector.Size = new System.Drawing.Size(173, 21);
@@ -203,30 +217,31 @@
             // 
             // inputHistogram
             // 
-            chartArea1.Name = "ChartArea1";
-            this.inputHistogram.ChartAreas.Add(chartArea1);
+            chartArea3.Name = "ChartArea1";
+            this.inputHistogram.ChartAreas.Add(chartArea3);
             this.inputHistogram.Location = new System.Drawing.Point(269, 563);
             this.inputHistogram.Name = "inputHistogram";
-            series1.ChartArea = "ChartArea1";
-            series1.Name = "Output";
-            this.inputHistogram.Series.Add(series1);
+            series3.ChartArea = "ChartArea1";
+            series3.Name = "Output";
+            this.inputHistogram.Series.Add(series3);
             this.inputHistogram.Size = new System.Drawing.Size(258, 245);
             this.inputHistogram.TabIndex = 8;
             // 
             // outputHistogram
             // 
-            chartArea2.Name = "ChartArea1";
-            this.outputHistogram.ChartAreas.Add(chartArea2);
+            chartArea4.Name = "ChartArea1";
+            this.outputHistogram.ChartAreas.Add(chartArea4);
             this.outputHistogram.Location = new System.Drawing.Point(531, 563);
             this.outputHistogram.Name = "outputHistogram";
-            series2.ChartArea = "ChartArea1";
-            series2.Name = "Input";
-            this.outputHistogram.Series.Add(series2);
+            series4.ChartArea = "ChartArea1";
+            series4.Name = "Input";
+            this.outputHistogram.Series.Add(series4);
             this.outputHistogram.Size = new System.Drawing.Size(258, 246);
             this.outputHistogram.TabIndex = 9;
             // 
             // optionsBox
             // 
+            this.optionsBox.Controls.Add(this.morphoFiltersBox);
             this.optionsBox.Controls.Add(this.colourOptionsBox);
             this.optionsBox.Controls.Add(this.edgeBox);
             this.optionsBox.Controls.Add(this.caBox);
@@ -253,9 +268,9 @@
             this.colourOptionsBox.Controls.Add(this.blueMixIn);
             this.colourOptionsBox.Controls.Add(this.greenMixIn);
             this.colourOptionsBox.Controls.Add(this.redMixIn);
-            this.colourOptionsBox.Location = new System.Drawing.Point(21, 300);
+            this.colourOptionsBox.Location = new System.Drawing.Point(6, 300);
             this.colourOptionsBox.Name = "colourOptionsBox";
-            this.colourOptionsBox.Size = new System.Drawing.Size(200, 56);
+            this.colourOptionsBox.Size = new System.Drawing.Size(215, 56);
             this.colourOptionsBox.TabIndex = 16;
             this.colourOptionsBox.TabStop = false;
             this.colourOptionsBox.Text = "Colour";
@@ -317,9 +332,9 @@
             this.edgeBox.Controls.Add(this.edgeGaussianCheck);
             this.edgeBox.Controls.Add(this.label10);
             this.edgeBox.Controls.Add(this.edgeSharpW);
-            this.edgeBox.Location = new System.Drawing.Point(21, 182);
+            this.edgeBox.Location = new System.Drawing.Point(6, 182);
             this.edgeBox.Name = "edgeBox";
-            this.edgeBox.Size = new System.Drawing.Size(200, 111);
+            this.edgeBox.Size = new System.Drawing.Size(215, 111);
             this.edgeBox.TabIndex = 15;
             this.edgeBox.TabStop = false;
             this.edgeBox.Text = "Edge Detection and Sharpening";
@@ -372,9 +387,9 @@
             this.caBox.Controls.Add(this.label6);
             this.caBox.Controls.Add(this.label5);
             this.caBox.Controls.Add(this.useMAC);
-            this.caBox.Location = new System.Drawing.Point(21, 76);
+            this.caBox.Location = new System.Drawing.Point(6, 76);
             this.caBox.Name = "caBox";
-            this.caBox.Size = new System.Drawing.Size(200, 100);
+            this.caBox.Size = new System.Drawing.Size(215, 100);
             this.caBox.TabIndex = 8;
             this.caBox.TabStop = false;
             this.caBox.Text = "Contrast Adjustment";
@@ -707,6 +722,58 @@
             this.imageTypeLabel.TabIndex = 20;
             this.imageTypeLabel.Text = "Image type = ";
             // 
+            // morphoFiltersBox
+            // 
+            this.morphoFiltersBox.Controls.Add(this.morphoShapeIn);
+            this.morphoFiltersBox.Controls.Add(this.morphoSizeIn);
+            this.morphoFiltersBox.Controls.Add(this.label22);
+            this.morphoFiltersBox.Controls.Add(this.label19);
+            this.morphoFiltersBox.Location = new System.Drawing.Point(6, 363);
+            this.morphoFiltersBox.Name = "morphoFiltersBox";
+            this.morphoFiltersBox.Size = new System.Drawing.Size(221, 52);
+            this.morphoFiltersBox.TabIndex = 17;
+            this.morphoFiltersBox.TabStop = false;
+            this.morphoFiltersBox.Text = "Morphological Filters";
+            // 
+            // label19
+            // 
+            this.label19.AutoSize = true;
+            this.label19.Location = new System.Drawing.Point(7, 20);
+            this.label19.Name = "label19";
+            this.label19.Size = new System.Drawing.Size(30, 13);
+            this.label19.TabIndex = 0;
+            this.label19.Text = "Size:";
+            // 
+            // label22
+            // 
+            this.label22.AutoSize = true;
+            this.label22.Location = new System.Drawing.Point(68, 19);
+            this.label22.Name = "label22";
+            this.label22.Size = new System.Drawing.Size(41, 13);
+            this.label22.TabIndex = 1;
+            this.label22.Text = "Shape:";
+            // 
+            // morphoSizeIn
+            // 
+            this.morphoSizeIn.Location = new System.Drawing.Point(43, 17);
+            this.morphoSizeIn.Name = "morphoSizeIn";
+            this.morphoSizeIn.Size = new System.Drawing.Size(19, 20);
+            this.morphoSizeIn.TabIndex = 2;
+            this.morphoSizeIn.Text = "5";
+            // 
+            // morphoShapeIn
+            // 
+            this.morphoShapeIn.FormattingEnabled = true;
+            this.morphoShapeIn.Location = new System.Drawing.Point(107, 16);
+            this.morphoShapeIn.Items.AddRange(new object[] {
+            "plus",
+            "square",
+            "disk"});
+            this.morphoShapeIn.Name = "morphoShapeIn";
+            this.morphoShapeIn.Size = new System.Drawing.Size(102, 21);
+            this.morphoShapeIn.TabIndex = 3;
+            this.morphoShapeIn.Text = "Choose Shape";
+            // 
             // INFOIBV
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -747,6 +814,8 @@
             this.inputHistogramBox.PerformLayout();
             this.outputHistogramBox.ResumeLayout(false);
             this.outputHistogramBox.PerformLayout();
+            this.morphoFiltersBox.ResumeLayout(false);
+            this.morphoFiltersBox.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -817,6 +886,12 @@
         private System.Windows.Forms.TextBox greenMixIn;
         private System.Windows.Forms.TextBox redMixIn;
         private System.Windows.Forms.Label imageTypeLabel;
+        private System.Windows.Forms.GroupBox morphoFiltersBox;
+        private System.Windows.Forms.ComboBox morphoShapeIn;
+        private System.Windows.Forms.TextBox morphoSizeIn;
+        private System.Windows.Forms.Label label22;
+        private System.Windows.Forms.Label label19;
+        private System.ComponentModel.BackgroundWorker backgroundWorker1;
     }
 }
 
