@@ -11,6 +11,7 @@ namespace INFOIBV
     public partial class INFOIBV : Form
     {
         private Bitmap InputImage;
+        private Bitmap SecondImage;
         private Bitmap OutputImage;
 
         public INFOIBV()
@@ -38,6 +39,26 @@ namespace INFOIBV
             }
         }
 
+        /*
+         * loadSecondImage_Click: process when user clicks "Load second" button
+         */
+        private void loadSecondImage_Click(object sender, EventArgs e)
+        {
+            if (openImageDialog.ShowDialog() == DialogResult.OK)             // open file dialog
+            {
+                string file = openImageDialog.FileName;                     // get the file name
+                imageFileName.Text = file;                                  // show file name
+                if (SecondImage != null) SecondImage.Dispose();               // reset image
+                SecondImage = new Bitmap(file);                              // create new Bitmap from file
+                if (SecondImage.Size.Height <= 0 || SecondImage.Size.Width <= 0 ||
+                    SecondImage.Size.Height > 512 || SecondImage.Size.Width > 512) // dimension check (may be removed or altered)
+                    MessageBox.Show("Error in image dimensions (have to be > 0 and <= 512)");
+                else
+                    pictureBox2.Image = (Image)SecondImage;                 // display input image
+
+            }
+        }
+
 
         /*
          * applyButton_Click: process when user clicks "Apply" button
@@ -52,10 +73,8 @@ namespace INFOIBV
             }
             if (OutputImage != null) OutputImage.Dispose();                 // reset output image
 
-            int imageWidth = InputImage.Size.Width; //width and height will be called a lot from here
-            int imageHeight = InputImage.Size.Height;
-            OutputImage = new Bitmap(imageWidth, imageHeight); // create new output image
-            Color[,] Image = new Color[imageWidth, imageHeight]; // create array to speed-up operations (Bitmap functions are very slow)
+            OutputImage = new Bitmap(InputImage.Size.Width, InputImage.Size.Height); // create new output image
+            Color[,] Image = new Color[InputImage.Size.Width, InputImage.Size.Height]; // create array to speed-up operations (Bitmap functions are very slow)
 
             if (!correctColours()) MessageBox.Show("Please using valid mixing coefficients. Using default values.");
 
@@ -63,6 +82,18 @@ namespace INFOIBV
             for (int x = 0; x < InputImage.Size.Width; x++)                 // loop over columns
                 for (int y = 0; y < InputImage.Size.Height; y++)            // loop over rows
                     Image[x, y] = InputImage.GetPixel(x, y);                // set pixel color in array at (x,y)
+
+            // implement second image, used in AND and OR operations
+            Color[,] Image2 = Image;
+            if (SecondImage != null)
+            {
+                Image2 = new Color[SecondImage.Size.Width, SecondImage.Size.Height];
+
+                // copy input Bitmap to array            
+                for (int x = 0; x < SecondImage.Size.Width; x++)                 // loop over columns
+                    for (int y = 0; y < SecondImage.Size.Height; y++)            // loop over rows
+                        Image2[x, y] = SecondImage.GetPixel(x, y);                // set pixel color in array at (x,y)
+            }
 
             // setup progress bar
             progressBar.Visible = true;
@@ -77,6 +108,8 @@ namespace INFOIBV
             // ====================================================================
 
             string imageType = typeCheck(Image); // return whether image is colour, grayscale or binary
+            string image2Type = "null";
+            if (SecondImage != null) image2Type = typeCheck(Image2);
 
             imageTypeLabel.Text = "Image type = " + imageType;
             imageTypeLabel.Update();
@@ -220,6 +253,26 @@ namespace INFOIBV
                 int size = Convert.ToInt32(morphoSizeIn.Text);                              // currently breaks if not an int, need to make checks
                 int[,] structure = createStructuringElement(size, morphoShapeIn.Text, imageType);     // currenty all false if not right shape, need to make checks
                 workingImage = trimBorder(closeImage(extendBorder(workingImage, size), structure, imageType), size); // extend border of image, close image, trim border of image
+            }
+
+            if (functionSelector.SelectedIndex == 14) // AND
+            {
+                if (imageType != "binary" || image2Type != "binary")
+                {
+                    MessageBox.Show("Please enter binary images.");
+                    return;
+                }
+                workingImage = andImages(workingImage, Image2);
+            }
+
+            if (functionSelector.SelectedIndex == 15) // OR
+            {
+                if (imageType != "binary" || image2Type != "binary")
+                {
+                    MessageBox.Show("Please enter binary images.");
+                    return;
+                }
+                workingImage = orImages(workingImage, Image2);
             }
 
             // refresh histogram labels (in case histogram equalization was previosuly applied and changed the labels)
@@ -1108,9 +1161,11 @@ namespace INFOIBV
 
             // update image histogram statistics
             bool minimum = false; bool maximum = false;
+            int distinct = 0;
             int min = 0; int max = 0;
             for (int i = 0; i < 256; i++)
             {
+                if (histogram[i] > 0) distinct++;
                 if (histogram[i] != 0 && !minimum)
                 {
                     minimum = true;
@@ -1124,6 +1179,7 @@ namespace INFOIBV
                     maxValIn.Text = max.ToString();
                 }
             }
+            distValsIn.Text = distinct.ToString();
 
             if (histogram[0] == 0 || histogram[255] == 0)
             {
@@ -1137,6 +1193,7 @@ namespace INFOIBV
             if (maxDynRange) maxDynRangeIn.Text = "true";
             else maxDynRangeIn.Text = "false";
 
+            distValsIn.Update();
             minValIn.Update();
             maxValIn.Update();
             maxDynRangeIn.Update();
@@ -1160,9 +1217,11 @@ namespace INFOIBV
 
             // update image histogram statistics
             bool minimum = false; bool maximum = false;
+            int distinct = 0;
             int min = 0; int max = 0;
             for (int i = 0; i < 256; i++)
             {
+                if (histogram[i] > 0) distinct++;
                 if (histogram[i] != 0 && !minimum)
                 {
                     minimum = true;
@@ -1176,6 +1235,7 @@ namespace INFOIBV
                     maxValOut.Text = max.ToString();
                 }
             }
+            distValsOut.Text = distinct.ToString();
 
             if (histogram[0] == 0 || histogram[255] == 0)
             {
@@ -1189,6 +1249,7 @@ namespace INFOIBV
             if (maxDynRange) maxDynRangeOut.Text = "true";
             else maxDynRangeOut.Text = "false";
 
+            distValsOut.Update();
             minValOut.Update();
             maxValOut.Update();
             maxDynRangeOut.Update();
@@ -1480,34 +1541,50 @@ namespace INFOIBV
             return outputImage;
         }
 
-       /*
-       * countValues: given a Color[,] grayscale or binary image count the number of distinct values and calculate their histogram
-       * input:   inputImage        Color[,] (grayscale) image
-       * output:  count             number (int) of distinct values
-       *          histogram         histogram (int[]) of distinct values
-       */
-        private Tuple<int, int[]> countValues(Color[,] inputImage)
+        /*
+        * andImage: given two Color[,] binary images apply AND operator to the image
+        * input:   image1           Color[,] (binary) image
+        *          image2           Color[,] (binary) image
+        * output:  outputImage      Color[,] (binary) image
+        */
+        private Color[,] andImages(Color[,] image1, Color[,] image2)
         {
-            int count = 0;
-            int[] histogram = new int[count];
+            int minWidth = Math.Min(image1.GetLength(0), image2.GetLength(0));
+            int minHeight = Math.Min(image1.GetLength(1), image2.GetLength(1));
+            Color[,] outputImage = new Color[minWidth, minHeight]; // create output image, and account for possible difference in size by choosing min width and height
 
-            // write code implement value counting and determine count and histogram based on inputImage
-
-            Tuple<int, int[]> output = new Tuple<int, int[]>(count, histogram);
-            return output;
-        }
-
-        private bool[,] reflectElement(bool[,] structuringElement)
-        {
-            bool[,] reflectedElement = new bool[structuringElement.GetLength(0), structuringElement.GetLength(1)];
-            for (int i = 0; i < structuringElement.GetLength(0); i++)
-                for (int j = 0; j < structuringElement.GetLength(1); j++)
+            for (int i = 0; i < minWidth; i++)
+                for (int j = 0; j < minHeight; j++)
                 {
-                    if (structuringElement[i, j])
-                        reflectedElement[j, i] = true;
+                    if (image1[i, j].R == 0 && image2[i, j].R == 0)         // if image 1 and image2 has a foreground pixel here
+                        outputImage[i, j] = Color.FromArgb(0, 0, 0);        // then outputImage also becomes foreground here
+                    else outputImage[i, j] = Color.FromArgb(255, 255, 255); // else out put becomes background here
                 }
 
-            return reflectedElement;
+            return outputImage;
+        }
+
+        /*
+        * orImage: given two Color[,] binary images apply OR operator to the image
+        * input:   image1           Color[,] (binary) image
+        *          image2           Color[,] (binary) image
+        * output:  outputImage      Color[,] (binary) image
+        */
+        private Color[,] orImages(Color[,] image1, Color[,] image2)
+        {
+            int minWidth = Math.Min(image1.GetLength(0), image2.GetLength(0));
+            int minHeight = Math.Min(image1.GetLength(1), image2.GetLength(1));
+            Color[,] outputImage = new Color[minWidth, minHeight]; // create output image, and account for possible difference in size by choosing min width and height
+
+            for (int i = 0; i < minWidth; i++)
+                for (int j = 0; j < minHeight; j++)
+                {
+                    if (image1[i, j].R == 0 || image2[i, j].R == 0)         // if image 1 or image2 has a foreground pixel here
+                        outputImage[i, j] = Color.FromArgb(0, 0, 0);        // then outputImage also becomes foreground here
+                    else outputImage[i, j] = Color.FromArgb(255, 255, 255); // else out put becomes background here
+                }
+
+            return outputImage;
         }
 
         // implement boundary trace here (not sure of preferred output format yet)

@@ -28,10 +28,10 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea3 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Series series3 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea4 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Series series4 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
             this.LoadImageButton = new System.Windows.Forms.Button();
             this.openImageDialog = new System.Windows.Forms.OpenFileDialog();
             this.imageFileName = new System.Windows.Forms.TextBox();
@@ -45,6 +45,11 @@
             this.inputHistogram = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.outputHistogram = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.optionsBox = new System.Windows.Forms.GroupBox();
+            this.morphoFiltersBox = new System.Windows.Forms.GroupBox();
+            this.morphoShapeIn = new System.Windows.Forms.ComboBox();
+            this.morphoSizeIn = new System.Windows.Forms.TextBox();
+            this.label22 = new System.Windows.Forms.Label();
+            this.label19 = new System.Windows.Forms.Label();
             this.colourOptionsBox = new System.Windows.Forms.GroupBox();
             this.label16 = new System.Windows.Forms.Label();
             this.label15 = new System.Windows.Forms.Label();
@@ -93,30 +98,30 @@
             this.label21 = new System.Windows.Forms.Label();
             this.maxDynRangeOut = new System.Windows.Forms.Label();
             this.imageTypeLabel = new System.Windows.Forms.Label();
-            this.morphoFiltersBox = new System.Windows.Forms.GroupBox();
-            this.label19 = new System.Windows.Forms.Label();
-            this.label22 = new System.Windows.Forms.Label();
-            this.morphoSizeIn = new System.Windows.Forms.TextBox();
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
-            this.morphoShapeIn = new System.Windows.Forms.ComboBox();
+            this.loadSecondImage = new System.Windows.Forms.Button();
+            this.label23 = new System.Windows.Forms.Label();
+            this.label24 = new System.Windows.Forms.Label();
+            this.distValsIn = new System.Windows.Forms.Label();
+            this.distValsOut = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.inputHistogram)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.outputHistogram)).BeginInit();
             this.optionsBox.SuspendLayout();
+            this.morphoFiltersBox.SuspendLayout();
             this.colourOptionsBox.SuspendLayout();
             this.edgeBox.SuspendLayout();
             this.caBox.SuspendLayout();
             this.inputHistogramBox.SuspendLayout();
             this.outputHistogramBox.SuspendLayout();
-            this.morphoFiltersBox.SuspendLayout();
             this.SuspendLayout();
             // 
             // LoadImageButton
             // 
             this.LoadImageButton.Location = new System.Drawing.Point(12, 9);
             this.LoadImageButton.Name = "LoadImageButton";
-            this.LoadImageButton.Size = new System.Drawing.Size(98, 23);
+            this.LoadImageButton.Size = new System.Drawing.Size(87, 23);
             this.LoadImageButton.TabIndex = 0;
             this.LoadImageButton.Text = "Load image...";
             this.LoadImageButton.UseVisualStyleBackColor = true;
@@ -130,7 +135,7 @@
             // 
             // imageFileName
             // 
-            this.imageFileName.Location = new System.Drawing.Point(116, 11);
+            this.imageFileName.Location = new System.Drawing.Point(193, 11);
             this.imageFileName.Name = "imageFileName";
             this.imageFileName.ReadOnly = true;
             this.imageFileName.Size = new System.Drawing.Size(248, 20);
@@ -147,9 +152,9 @@
             // 
             // applyButton
             // 
-            this.applyButton.Location = new System.Drawing.Point(547, 9);
+            this.applyButton.Location = new System.Drawing.Point(626, 9);
             this.applyButton.Name = "applyButton";
-            this.applyButton.Size = new System.Drawing.Size(103, 23);
+            this.applyButton.Size = new System.Drawing.Size(71, 23);
             this.applyButton.TabIndex = 3;
             this.applyButton.Text = "Apply";
             this.applyButton.UseVisualStyleBackColor = true;
@@ -181,9 +186,9 @@
             // 
             // progressBar
             // 
-            this.progressBar.Location = new System.Drawing.Point(656, 11);
+            this.progressBar.Location = new System.Drawing.Point(703, 11);
             this.progressBar.Name = "progressBar";
-            this.progressBar.Size = new System.Drawing.Size(276, 20);
+            this.progressBar.Size = new System.Drawing.Size(229, 20);
             this.progressBar.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
             this.progressBar.TabIndex = 6;
             this.progressBar.Visible = false;
@@ -209,7 +214,7 @@
             "14. AND",
             "15. OR",
             "16. Boundary Trace"});
-            this.functionSelector.Location = new System.Drawing.Point(370, 11);
+            this.functionSelector.Location = new System.Drawing.Point(447, 11);
             this.functionSelector.Name = "functionSelector";
             this.functionSelector.Size = new System.Drawing.Size(173, 21);
             this.functionSelector.TabIndex = 7;
@@ -217,25 +222,25 @@
             // 
             // inputHistogram
             // 
-            chartArea3.Name = "ChartArea1";
-            this.inputHistogram.ChartAreas.Add(chartArea3);
+            chartArea1.Name = "ChartArea1";
+            this.inputHistogram.ChartAreas.Add(chartArea1);
             this.inputHistogram.Location = new System.Drawing.Point(269, 563);
             this.inputHistogram.Name = "inputHistogram";
-            series3.ChartArea = "ChartArea1";
-            series3.Name = "Output";
-            this.inputHistogram.Series.Add(series3);
+            series1.ChartArea = "ChartArea1";
+            series1.Name = "Output";
+            this.inputHistogram.Series.Add(series1);
             this.inputHistogram.Size = new System.Drawing.Size(258, 245);
             this.inputHistogram.TabIndex = 8;
             // 
             // outputHistogram
             // 
-            chartArea4.Name = "ChartArea1";
-            this.outputHistogram.ChartAreas.Add(chartArea4);
+            chartArea2.Name = "ChartArea1";
+            this.outputHistogram.ChartAreas.Add(chartArea2);
             this.outputHistogram.Location = new System.Drawing.Point(531, 563);
             this.outputHistogram.Name = "outputHistogram";
-            series4.ChartArea = "ChartArea1";
-            series4.Name = "Input";
-            this.outputHistogram.Series.Add(series4);
+            series2.ChartArea = "ChartArea1";
+            series2.Name = "Input";
+            this.outputHistogram.Series.Add(series2);
             this.outputHistogram.Size = new System.Drawing.Size(258, 246);
             this.outputHistogram.TabIndex = 9;
             // 
@@ -259,6 +264,58 @@
             this.optionsBox.TabIndex = 10;
             this.optionsBox.TabStop = false;
             this.optionsBox.Text = "Options";
+            // 
+            // morphoFiltersBox
+            // 
+            this.morphoFiltersBox.Controls.Add(this.morphoShapeIn);
+            this.morphoFiltersBox.Controls.Add(this.morphoSizeIn);
+            this.morphoFiltersBox.Controls.Add(this.label22);
+            this.morphoFiltersBox.Controls.Add(this.label19);
+            this.morphoFiltersBox.Location = new System.Drawing.Point(6, 363);
+            this.morphoFiltersBox.Name = "morphoFiltersBox";
+            this.morphoFiltersBox.Size = new System.Drawing.Size(221, 52);
+            this.morphoFiltersBox.TabIndex = 17;
+            this.morphoFiltersBox.TabStop = false;
+            this.morphoFiltersBox.Text = "Morphological Filters";
+            // 
+            // morphoShapeIn
+            // 
+            this.morphoShapeIn.FormattingEnabled = true;
+            this.morphoShapeIn.Items.AddRange(new object[] {
+            "plus",
+            "square",
+            "disk"});
+            this.morphoShapeIn.Location = new System.Drawing.Point(107, 16);
+            this.morphoShapeIn.Name = "morphoShapeIn";
+            this.morphoShapeIn.Size = new System.Drawing.Size(102, 21);
+            this.morphoShapeIn.TabIndex = 3;
+            this.morphoShapeIn.Text = "Choose Shape";
+            // 
+            // morphoSizeIn
+            // 
+            this.morphoSizeIn.Location = new System.Drawing.Point(43, 17);
+            this.morphoSizeIn.Name = "morphoSizeIn";
+            this.morphoSizeIn.Size = new System.Drawing.Size(19, 20);
+            this.morphoSizeIn.TabIndex = 2;
+            this.morphoSizeIn.Text = "5";
+            // 
+            // label22
+            // 
+            this.label22.AutoSize = true;
+            this.label22.Location = new System.Drawing.Point(68, 19);
+            this.label22.Name = "label22";
+            this.label22.Size = new System.Drawing.Size(41, 13);
+            this.label22.TabIndex = 1;
+            this.label22.Text = "Shape:";
+            // 
+            // label19
+            // 
+            this.label19.AutoSize = true;
+            this.label19.Location = new System.Drawing.Point(7, 20);
+            this.label19.Name = "label19";
+            this.label19.Size = new System.Drawing.Size(30, 13);
+            this.label19.TabIndex = 0;
+            this.label19.Text = "Size:";
             // 
             // colourOptionsBox
             // 
@@ -555,6 +612,8 @@
             // 
             // inputHistogramBox
             // 
+            this.inputHistogramBox.Controls.Add(this.distValsIn);
+            this.inputHistogramBox.Controls.Add(this.label23);
             this.inputHistogramBox.Controls.Add(this.maxValIn);
             this.inputHistogramBox.Controls.Add(this.minValIn);
             this.inputHistogramBox.Controls.Add(this.label12);
@@ -626,6 +685,8 @@
             // 
             // outputHistogramBox
             // 
+            this.outputHistogramBox.Controls.Add(this.distValsOut);
+            this.outputHistogramBox.Controls.Add(this.label24);
             this.outputHistogramBox.Controls.Add(this.maxValOut);
             this.outputHistogramBox.Controls.Add(this.minValOut);
             this.outputHistogramBox.Controls.Add(this.label17);
@@ -722,63 +783,58 @@
             this.imageTypeLabel.TabIndex = 20;
             this.imageTypeLabel.Text = "Image type = ";
             // 
-            // morphoFiltersBox
+            // loadSecondImage
             // 
-            this.morphoFiltersBox.Controls.Add(this.morphoShapeIn);
-            this.morphoFiltersBox.Controls.Add(this.morphoSizeIn);
-            this.morphoFiltersBox.Controls.Add(this.label22);
-            this.morphoFiltersBox.Controls.Add(this.label19);
-            this.morphoFiltersBox.Location = new System.Drawing.Point(6, 363);
-            this.morphoFiltersBox.Name = "morphoFiltersBox";
-            this.morphoFiltersBox.Size = new System.Drawing.Size(221, 52);
-            this.morphoFiltersBox.TabIndex = 17;
-            this.morphoFiltersBox.TabStop = false;
-            this.morphoFiltersBox.Text = "Morphological Filters";
+            this.loadSecondImage.Location = new System.Drawing.Point(105, 9);
+            this.loadSecondImage.Name = "loadSecondImage";
+            this.loadSecondImage.Size = new System.Drawing.Size(82, 23);
+            this.loadSecondImage.TabIndex = 21;
+            this.loadSecondImage.Text = "Image #2";
+            this.loadSecondImage.UseVisualStyleBackColor = true;
+            this.loadSecondImage.Click += new System.EventHandler(this.loadSecondImage_Click);
             // 
-            // label19
+            // label23
             // 
-            this.label19.AutoSize = true;
-            this.label19.Location = new System.Drawing.Point(7, 20);
-            this.label19.Name = "label19";
-            this.label19.Size = new System.Drawing.Size(30, 13);
-            this.label19.TabIndex = 0;
-            this.label19.Text = "Size:";
+            this.label23.AutoSize = true;
+            this.label23.Location = new System.Drawing.Point(6, 136);
+            this.label23.Name = "label23";
+            this.label23.Size = new System.Drawing.Size(112, 13);
+            this.label23.TabIndex = 24;
+            this.label23.Text = "No. of Distinct Values:";
             // 
-            // label22
+            // label24
             // 
-            this.label22.AutoSize = true;
-            this.label22.Location = new System.Drawing.Point(68, 19);
-            this.label22.Name = "label22";
-            this.label22.Size = new System.Drawing.Size(41, 13);
-            this.label22.TabIndex = 1;
-            this.label22.Text = "Shape:";
+            this.label24.AutoSize = true;
+            this.label24.Location = new System.Drawing.Point(6, 136);
+            this.label24.Name = "label24";
+            this.label24.Size = new System.Drawing.Size(112, 13);
+            this.label24.TabIndex = 25;
+            this.label24.Text = "No. of Distinct Values:";
             // 
-            // morphoSizeIn
+            // distValsIn
             // 
-            this.morphoSizeIn.Location = new System.Drawing.Point(43, 17);
-            this.morphoSizeIn.Name = "morphoSizeIn";
-            this.morphoSizeIn.Size = new System.Drawing.Size(19, 20);
-            this.morphoSizeIn.TabIndex = 2;
-            this.morphoSizeIn.Text = "5";
+            this.distValsIn.AutoSize = true;
+            this.distValsIn.Location = new System.Drawing.Point(215, 136);
+            this.distValsIn.Name = "distValsIn";
+            this.distValsIn.Size = new System.Drawing.Size(21, 13);
+            this.distValsIn.TabIndex = 22;
+            this.distValsIn.Text = "##";
             // 
-            // morphoShapeIn
+            // distValsOut
             // 
-            this.morphoShapeIn.FormattingEnabled = true;
-            this.morphoShapeIn.Location = new System.Drawing.Point(107, 16);
-            this.morphoShapeIn.Items.AddRange(new object[] {
-            "plus",
-            "square",
-            "disk"});
-            this.morphoShapeIn.Name = "morphoShapeIn";
-            this.morphoShapeIn.Size = new System.Drawing.Size(102, 21);
-            this.morphoShapeIn.TabIndex = 3;
-            this.morphoShapeIn.Text = "Choose Shape";
+            this.distValsOut.AutoSize = true;
+            this.distValsOut.Location = new System.Drawing.Point(215, 136);
+            this.distValsOut.Name = "distValsOut";
+            this.distValsOut.Size = new System.Drawing.Size(21, 13);
+            this.distValsOut.TabIndex = 25;
+            this.distValsOut.Text = "##";
             // 
             // INFOIBV
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1295, 801);
+            this.Controls.Add(this.loadSecondImage);
             this.Controls.Add(this.imageTypeLabel);
             this.Controls.Add(this.outputHistogramBox);
             this.Controls.Add(this.inputHistogramBox);
@@ -804,6 +860,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.outputHistogram)).EndInit();
             this.optionsBox.ResumeLayout(false);
             this.optionsBox.PerformLayout();
+            this.morphoFiltersBox.ResumeLayout(false);
+            this.morphoFiltersBox.PerformLayout();
             this.colourOptionsBox.ResumeLayout(false);
             this.colourOptionsBox.PerformLayout();
             this.edgeBox.ResumeLayout(false);
@@ -814,8 +872,6 @@
             this.inputHistogramBox.PerformLayout();
             this.outputHistogramBox.ResumeLayout(false);
             this.outputHistogramBox.PerformLayout();
-            this.morphoFiltersBox.ResumeLayout(false);
-            this.morphoFiltersBox.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -892,6 +948,11 @@
         private System.Windows.Forms.Label label22;
         private System.Windows.Forms.Label label19;
         private System.ComponentModel.BackgroundWorker backgroundWorker1;
+        private System.Windows.Forms.Button loadSecondImage;
+        private System.Windows.Forms.Label distValsIn;
+        private System.Windows.Forms.Label label23;
+        private System.Windows.Forms.Label distValsOut;
+        private System.Windows.Forms.Label label24;
     }
 }
 
