@@ -82,6 +82,8 @@
             this.maxDynRangeIn = new System.Windows.Forms.Label();
             this.label14 = new System.Windows.Forms.Label();
             this.inputHistogramBox = new System.Windows.Forms.GroupBox();
+            this.distValsIn = new System.Windows.Forms.Label();
+            this.label23 = new System.Windows.Forms.Label();
             this.maxValIn = new System.Windows.Forms.Label();
             this.minValIn = new System.Windows.Forms.Label();
             this.label12 = new System.Windows.Forms.Label();
@@ -89,6 +91,8 @@
             this.maxContrastIn = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
             this.outputHistogramBox = new System.Windows.Forms.GroupBox();
+            this.distValsOut = new System.Windows.Forms.Label();
+            this.label24 = new System.Windows.Forms.Label();
             this.maxValOut = new System.Windows.Forms.Label();
             this.minValOut = new System.Windows.Forms.Label();
             this.label17 = new System.Windows.Forms.Label();
@@ -100,10 +104,10 @@
             this.imageTypeLabel = new System.Windows.Forms.Label();
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.loadSecondImage = new System.Windows.Forms.Button();
-            this.label23 = new System.Windows.Forms.Label();
-            this.label24 = new System.Windows.Forms.Label();
-            this.distValsIn = new System.Windows.Forms.Label();
-            this.distValsOut = new System.Windows.Forms.Label();
+            this.label25 = new System.Windows.Forms.Label();
+            this.label26 = new System.Windows.Forms.Label();
+            this.foregroundInPx = new System.Windows.Forms.Label();
+            this.foregroundOutPx = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.inputHistogram)).BeginInit();
@@ -612,6 +616,8 @@
             // 
             // inputHistogramBox
             // 
+            this.inputHistogramBox.Controls.Add(this.foregroundInPx);
+            this.inputHistogramBox.Controls.Add(this.label25);
             this.inputHistogramBox.Controls.Add(this.distValsIn);
             this.inputHistogramBox.Controls.Add(this.label23);
             this.inputHistogramBox.Controls.Add(this.maxValIn);
@@ -628,6 +634,24 @@
             this.inputHistogramBox.TabIndex = 18;
             this.inputHistogramBox.TabStop = false;
             this.inputHistogramBox.Text = "Input Histogram Data";
+            // 
+            // distValsIn
+            // 
+            this.distValsIn.AutoSize = true;
+            this.distValsIn.Location = new System.Drawing.Point(215, 136);
+            this.distValsIn.Name = "distValsIn";
+            this.distValsIn.Size = new System.Drawing.Size(21, 13);
+            this.distValsIn.TabIndex = 22;
+            this.distValsIn.Text = "##";
+            // 
+            // label23
+            // 
+            this.label23.AutoSize = true;
+            this.label23.Location = new System.Drawing.Point(6, 136);
+            this.label23.Name = "label23";
+            this.label23.Size = new System.Drawing.Size(112, 13);
+            this.label23.TabIndex = 24;
+            this.label23.Text = "No. of Distinct Values:";
             // 
             // maxValIn
             // 
@@ -685,6 +709,8 @@
             // 
             // outputHistogramBox
             // 
+            this.outputHistogramBox.Controls.Add(this.foregroundOutPx);
+            this.outputHistogramBox.Controls.Add(this.label26);
             this.outputHistogramBox.Controls.Add(this.distValsOut);
             this.outputHistogramBox.Controls.Add(this.label24);
             this.outputHistogramBox.Controls.Add(this.maxValOut);
@@ -701,6 +727,24 @@
             this.outputHistogramBox.TabIndex = 19;
             this.outputHistogramBox.TabStop = false;
             this.outputHistogramBox.Text = "Output Histogram Data";
+            // 
+            // distValsOut
+            // 
+            this.distValsOut.AutoSize = true;
+            this.distValsOut.Location = new System.Drawing.Point(215, 136);
+            this.distValsOut.Name = "distValsOut";
+            this.distValsOut.Size = new System.Drawing.Size(21, 13);
+            this.distValsOut.TabIndex = 25;
+            this.distValsOut.Text = "##";
+            // 
+            // label24
+            // 
+            this.label24.AutoSize = true;
+            this.label24.Location = new System.Drawing.Point(6, 136);
+            this.label24.Name = "label24";
+            this.label24.Size = new System.Drawing.Size(112, 13);
+            this.label24.TabIndex = 25;
+            this.label24.Text = "No. of Distinct Values:";
             // 
             // maxValOut
             // 
@@ -793,41 +837,41 @@
             this.loadSecondImage.UseVisualStyleBackColor = true;
             this.loadSecondImage.Click += new System.EventHandler(this.loadSecondImage_Click);
             // 
-            // label23
+            // label25
             // 
-            this.label23.AutoSize = true;
-            this.label23.Location = new System.Drawing.Point(6, 136);
-            this.label23.Name = "label23";
-            this.label23.Size = new System.Drawing.Size(112, 13);
-            this.label23.TabIndex = 24;
-            this.label23.Text = "No. of Distinct Values:";
+            this.label25.AutoSize = true;
+            this.label25.Location = new System.Drawing.Point(6, 159);
+            this.label25.Name = "label25";
+            this.label25.Size = new System.Drawing.Size(160, 13);
+            this.label25.TabIndex = 25;
+            this.label25.Text = "No. of Foreground (black) pixels:";
             // 
-            // label24
+            // label26
             // 
-            this.label24.AutoSize = true;
-            this.label24.Location = new System.Drawing.Point(6, 136);
-            this.label24.Name = "label24";
-            this.label24.Size = new System.Drawing.Size(112, 13);
-            this.label24.TabIndex = 25;
-            this.label24.Text = "No. of Distinct Values:";
+            this.label26.AutoSize = true;
+            this.label26.Location = new System.Drawing.Point(6, 159);
+            this.label26.Name = "label26";
+            this.label26.Size = new System.Drawing.Size(160, 13);
+            this.label26.TabIndex = 26;
+            this.label26.Text = "No. of Foreground (black) pixels:";
             // 
-            // distValsIn
+            // foregroundInPx
             // 
-            this.distValsIn.AutoSize = true;
-            this.distValsIn.Location = new System.Drawing.Point(215, 136);
-            this.distValsIn.Name = "distValsIn";
-            this.distValsIn.Size = new System.Drawing.Size(21, 13);
-            this.distValsIn.TabIndex = 22;
-            this.distValsIn.Text = "##";
+            this.foregroundInPx.AutoSize = true;
+            this.foregroundInPx.Location = new System.Drawing.Point(215, 159);
+            this.foregroundInPx.Name = "foregroundInPx";
+            this.foregroundInPx.Size = new System.Drawing.Size(21, 13);
+            this.foregroundInPx.TabIndex = 26;
+            this.foregroundInPx.Text = "##";
             // 
-            // distValsOut
+            // foregroundOutPx
             // 
-            this.distValsOut.AutoSize = true;
-            this.distValsOut.Location = new System.Drawing.Point(215, 136);
-            this.distValsOut.Name = "distValsOut";
-            this.distValsOut.Size = new System.Drawing.Size(21, 13);
-            this.distValsOut.TabIndex = 25;
-            this.distValsOut.Text = "##";
+            this.foregroundOutPx.AutoSize = true;
+            this.foregroundOutPx.Location = new System.Drawing.Point(215, 159);
+            this.foregroundOutPx.Name = "foregroundOutPx";
+            this.foregroundOutPx.Size = new System.Drawing.Size(21, 13);
+            this.foregroundOutPx.TabIndex = 27;
+            this.foregroundOutPx.Text = "##";
             // 
             // INFOIBV
             // 
@@ -953,6 +997,10 @@
         private System.Windows.Forms.Label label23;
         private System.Windows.Forms.Label distValsOut;
         private System.Windows.Forms.Label label24;
+        private System.Windows.Forms.Label foregroundInPx;
+        private System.Windows.Forms.Label label25;
+        private System.Windows.Forms.Label foregroundOutPx;
+        private System.Windows.Forms.Label label26;
     }
 }
 

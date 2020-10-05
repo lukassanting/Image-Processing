@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
 using System.Linq;
@@ -273,6 +274,20 @@ namespace INFOIBV
                     return;
                 }
                 workingImage = orImages(workingImage, Image2);
+            }
+
+            if (functionSelector.SelectedIndex == 16)
+            {
+                if (imageType == "binary")
+                {
+                    Tuple<List<Point>, List<Point>> contours = traceBoundary(workingImage);
+
+                    foreach (Point p in contours.Item1)
+                    {
+                        workingImage[p.x, p.y] = Color.Red; //simple visualisation of the contour
+                    }
+                }
+                else MessageBox.Show("Only binary images are accepted for this function");
             }
 
             // refresh histogram labels (in case histogram equalization was previosuly applied and changed the labels)
@@ -829,7 +844,7 @@ namespace INFOIBV
                         tempImage[i, j] = Color.FromArgb(0, 0, 0);
                     }
                     else tempImage[i, j] = Color.FromArgb(255, 255, 255);
-                    progressBar.PerformStep();                              // increment progress bar
+                    //progressBar.PerformStep();                              // increment progress bar
                 }
             }
 
@@ -1193,6 +1208,9 @@ namespace INFOIBV
             if (maxDynRange) maxDynRangeIn.Text = "true";
             else maxDynRangeIn.Text = "false";
 
+            foregroundInPx.Text = histogram[0].ToString();
+
+            foregroundInPx.Update();
             distValsIn.Update();
             minValIn.Update();
             maxValIn.Update();
@@ -1249,6 +1267,9 @@ namespace INFOIBV
             if (maxDynRange) maxDynRangeOut.Text = "true";
             else maxDynRangeOut.Text = "false";
 
+            foregroundOutPx.Text = histogram[0].ToString();
+
+            foregroundOutPx.Update();
             distValsOut.Update();
             minValOut.Update();
             maxValOut.Update();
@@ -1330,7 +1351,7 @@ namespace INFOIBV
                     for (int i = -radius; i <= radius; i++)
                         for (int j = -radius; j <= radius; j++)
                         {
-                            if (radius + i == radius || radius + j == radius)
+                            if (i == 0 || j == 0)
                                 element[radius + i, radius + j] = 0;
                             else element[radius + i, radius + j] = 255;
                         }
@@ -1354,9 +1375,7 @@ namespace INFOIBV
                     for (int i = -radius; i <= radius; i++)
                         for (int j = -radius; j <= radius; j++)
                         {
-                            if (Math.Abs(i) == radius || Math.Abs(j) == radius)
-                                element[radius + i, radius + j] = 255;
-                            else element[radius + i, radius + j] = 0;
+                            element[radius + i, radius + j] = 0;
                         }
                 }
                 if (type == "grayscale") // scaled, higher value in middle, lower towards edge
@@ -1549,6 +1568,9 @@ namespace INFOIBV
         */
         private Color[,] andImages(Color[,] image1, Color[,] image2)
         {
+            progressUpdate.Text = "Applying AND function...";
+            progressUpdate.Refresh();
+
             int minWidth = Math.Min(image1.GetLength(0), image2.GetLength(0));
             int minHeight = Math.Min(image1.GetLength(1), image2.GetLength(1));
             Color[,] outputImage = new Color[minWidth, minHeight]; // create output image, and account for possible difference in size by choosing min width and height
@@ -1572,6 +1594,9 @@ namespace INFOIBV
         */
         private Color[,] orImages(Color[,] image1, Color[,] image2)
         {
+            progressUpdate.Text = "Applying OR function...";
+            progressUpdate.Refresh();
+
             int minWidth = Math.Min(image1.GetLength(0), image2.GetLength(0));
             int minHeight = Math.Min(image1.GetLength(1), image2.GetLength(1));
             Color[,] outputImage = new Color[minWidth, minHeight]; // create output image, and account for possible difference in size by choosing min width and height
@@ -1587,11 +1612,194 @@ namespace INFOIBV
             return outputImage;
         }
 
-        // implement boundary trace here (not sure of preferred output format yet)
+        /*
+        * traceBoundary: given a Color[,] binary image returns two lists containing an inner and outer contour of structures in that image. 
+        *                Inner contour doesn't work yet, as does anu more than one outer contour,but that wasn't necessary for the assignment (yet)
+        * input:   inputImage       Color[,] (binary) image
+        * output:  output           Tuple<List<Point>, List<Point>> Tuple of two different lists of Points (my own class, just an x and a y value)
+        */
+        private Tuple<List<Point>, List<Point>> traceBoundary(Color[,] inputImage)
+        {
+            progressUpdate.Text = "Tracing Boundary...";
+            progressUpdate.Refresh();
+
+            List<Point> outBoundary = new List<Point>();
+            List<Point> inBoundary = new List<Point>();
+
+            int width = inputImage.GetLength(0);
+            int height = inputImage.GetLength(1);
+
+            // loop one: make array with background = 0 and foreground = 1. Add 1px border (default background values = 0)
+            sbyte[,] labelledImage = new sbyte[width + 2, height + 2];
+            for (int i = 1; i < width; i++)
+                for (int j = 1; j < height; j++)
+                {
+                    if (inputImage[i - 1, j - 1].R == 0) labelledImage[i, j] = 1;   // black = foreground, foreground represented with 1
+                    else labelledImage[i, j] = 0;                               // white = background, background represented with 0
+                }
+
+            sbyte label = 2;
+            // loop two: use cases as described in book / slides to label region borders and add them to list
+            for (int i = 1; i < width; i++)
+                for (int j = 1; j < height; j++)
+                {
+                    if (labelledImage[i, j] == 1 && labelledImage[i - 1, j] > 1) // case C: transition from marked foreground to unmarked foreground
+                    {
+                        labelledImage[i, j] = labelledImage[i - 1, j];          // propogate label of neighbour
+                    }
+                    else if (labelledImage[i,j] == 1 && labelledImage[i - 1, j] < 1) // case A: transition from background to unmarked foreground pixel (this is outer contour)
+                    {
+                        // call traceContour
+                        Tuple<sbyte[,], List<Point>> contourReturn = traceContour(labelledImage, i, j, 0, label);
+                        labelledImage = contourReturn.Item1;
+                        foreach (Point p in contourReturn.Item2)
+                            outBoundary.Add(p);
+                        label++;
+                    }
+                    /*else if (labelledImage[i, j] == 0 && labelledImage[i - 1, j] > 1) // case B: transition from foreground pixel to an unmarked background pixel (this is inner contour)
+                    {
+                        // call traceContour
+                        Tuple<sbyte[,], List<Point>> contourReturn = traceContour(labelledImage, i, j, 0, label);
+                        labelledImage = contourReturn.Item1;
+                        foreach (Point p in contourReturn.Item2)
+                            inBoundary.Add(p);
+                    }*/
+                }
+
+            return new Tuple<List<Point>, List<Point>>(outBoundary, inBoundary);
+        }
+
+        /*
+        * traceContour: given an image, a start point, a direction and a label, traverses the contour of the found structure and labels the contour
+        * input:   image            sbyte[,] (binary) image
+        *          x, y             two ints for the current point
+        *          direction        int for the current direction
+        *          label            int for the current label
+        * output:  output           Tuple<sbyte[,], List<Point>> Tuple of the labelled iamge and the found contour
+        */
+        private Tuple<sbyte[,], List<Point>> traceContour(sbyte[,] image, int x, int y, int direction, sbyte label)
+        {
+            Point start = new Point(x, y);
+            List<Point> contour = new List<Point>();            //initialise contour 
+
+            Tuple<Point, int> nextPoint = findNextPoint(x, y, direction, image); // find first next point and direction
+            Point second = nextPoint.Item1;
+            contour.Add(second); //add next point to contour
+
+            int dNext = nextPoint.Item2;
+            Point previous = new Point(start.x, start.y);
+            Point current = new Point(second.x, second.y);
+
+            if (current == previous) // has no neighbours
+                return new Tuple<sbyte[,], List<Point>>(image, contour);
+            bool finished = false;
+
+            while (!finished) 
+            {
+                image[current.x, current.y] = label; // update label
+                int dSearch = (dNext + 6) % 8;
+
+                Tuple<Point, int> next = findNextPoint(current.x, current.y, dSearch, image);
+                previous = current;
+                current = next.Item1;
+                dNext = next.Item2;
+                if ((current.x == second.x && current.y == second.y) && (previous.x == start.x && previous.y == start.y)) // back to start
+                    finished = true;
+                else contour.Add(current);
+            }
+
+            Tuple<sbyte[,], List<Point>> output = new Tuple<sbyte[,], List<Point>>(image, contour);
+            return output;
+        }
+
+        /*
+        * findNextPoint: given an image, a point and a direction, determines next foreground point in the image from that point
+        * input:   image            sbyte[,] (binary) image
+        *          x, y             two ints for the current point
+        *          direction        int for the current direction
+        * output:  output           Tuple<Point, int> Tuple of the next point and the new direction
+        */
+        private Tuple<Point, int> findNextPoint(int x, int y, int direction, sbyte[,] image)
+        {
+            Point point = new Point(x, y);
+
+            for (int i = 0; i <= 6; i++)
+            {
+                Point relDir = delta(direction);
+                point.x += relDir.x; 
+                point.y += relDir.y;
+                if (image[point.x, point.y] < 1) // if point is background point, make it -1
+                {
+                    image[point.x, point.y] = -1;
+                    direction = (direction + 1) % 8;
+                }
+                else
+                {
+                    return new Tuple<Point, int>(point, direction);
+                }
+            }
+
+            Point output = new Point(x, y);
+            return new Tuple<Point, int>(output, direction); // found no next point, return start point
+        }
+
+        private Point delta(int direction)
+        {
+            int i = 0; int j = 0;
+
+            if (direction == 0)
+            {
+                i = 1; j = 0;
+            }
+            if (direction == 1)
+            {
+                i = 1; j = 1;
+            }
+            if (direction == 2)
+            {
+                i = 0; j = 1;
+            }
+            if (direction == 3)
+            {
+                i = -1; j = 1;
+            }
+            if (direction == 4)
+            {
+                i = -1; j = 0;
+            }
+            if (direction == 5)
+            {
+                i = -1; j = -1;
+            }
+            if (direction == 6)
+            {
+                i = 0; j = -1;
+            }
+            if (direction == 7)
+            {
+                i = 1; j = -1;
+            }
+
+            Point output = new Point(i, j);
+            return output;
+        }
+
+        
 
         // ====================================================================
         // ============= YOUR FUNCTIONS FOR ASSIGNMENT 3 GO HERE ==============
         // ====================================================================
 
+    }
+
+    public class Point
+    {
+        public int x;
+        public int y;
+
+        public Point(int i, int j)
+        {
+            x = i; y = j;
+        }
     }
 }
